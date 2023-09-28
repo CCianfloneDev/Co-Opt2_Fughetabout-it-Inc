@@ -8,18 +8,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-
+import com.example.coopt2_fughetabout_it_inc.Data.Note
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            NoteCard(Note("boo", "Jetpack Compose"))
+            NoteCard(Note(title = "boo", content = "Jetpack Compose", categoryId = null, reminderId =  null))
         }
     }
 }
 
-data class Note(val title: String, val content: String)
 
 @Composable
 fun NoteCard(msg: Note) {
@@ -33,6 +32,6 @@ fun NoteCard(msg: Note) {
 @Composable
 fun PreviewNoteCard() {
     NoteCard(
-        msg = Note("Lexi", "Compose")
+        msg = Note(title = "Lexi", content = "Compose",categoryId = null, reminderId =  null)
     )
 }
