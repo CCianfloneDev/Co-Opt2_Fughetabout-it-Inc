@@ -23,6 +23,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <meta-data
+            android:name="androidx.room.auto.AutoMigrationLogger"
+            android:value="FULL" />
+        <meta-data
+            android:name="androidx.room.RoomProcessor"
+            android:value="io.objectbox.processor.ObjectBoxAnnotationProcessor" />
     </application>
 
 </manifest>

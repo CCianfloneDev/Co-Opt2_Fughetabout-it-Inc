@@ -14,19 +14,28 @@ import com.example.coopt2_fughetabout_it_inc.Data.Note
 import com.example.coopt2_fughetabout_it_inc.composables.NotesAppUI
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.coopt2_fughetabout_it_inc.Data.AppDatabase
 import com.example.coopt2_fughetabout_it_inc.Data.NoteDao
+import androidx.room.Room
+
 
 class MainActivity : ComponentActivity() {
+    private lateinit var noteDao: NoteDao
     private lateinit var notesViewModel: NotesViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        setContent {
-//            NoteCard(Note(title = "boo", content = "Jetpack Compose", categoryId = null, reminderId =  null))
-//        }
-        val noteDao = NoteDao()
-        notesViewModel = ViewModelProvider(this, NotesViewModelFactory(noteDao)).get(NotesViewModel::class.java)
 
+        // Initialize the AppDatabase and get the NoteDao instance
+        val appDatabase = AppDatabase.getDatabase(applicationContext)
+        noteDao = appDatabase.noteDao()
 
+        // Initialize the ViewModel
+        notesViewModel = ViewModelProvider(
+            this,
+            NotesViewModelFactory(noteDao)
+        ).get(NotesViewModel::class.java)
+
+        // Set the content view with NotesAppUI
         setContent {
             NotesAppUI(
                 notes = notesViewModel.allNotes.value ?: emptyList(),
@@ -41,11 +50,6 @@ class MainActivity : ComponentActivity() {
                     notesViewModel.insertOrUpdate(newNote)
                 }
             )
-        }
-        setContent {
-            NotesAppUI(notes = getNotes()) {
-                // Handle the click action to add a new note
-            }
         }
     }
 
