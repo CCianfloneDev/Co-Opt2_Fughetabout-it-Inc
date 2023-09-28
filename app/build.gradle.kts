@@ -1,6 +1,9 @@
+import org.jetbrains.kotlin.kapt3.base.Kapt.kapt
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("kotlin-kapt")
 }
 
 android {
@@ -72,4 +75,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
     implementation("androidx.activity:activity-compose:1.7.2")
 
+    implementation ("android.arch.lifecycle:extensions:1.1.0")
+    kapt ("android.arch.lifecycle:compiler:1.1.0")
+
+    implementation ("android.arch.persistence.room:runtime:1.0.0")
+    kapt("android.arch.persistence.room:compiler:1.0.0")
 }
