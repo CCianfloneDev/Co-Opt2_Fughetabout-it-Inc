@@ -44,18 +44,19 @@ fun NotesAppUI(notes: LiveData<List<Note>>, onAddNoteClick: () -> Unit) {
     val notesList = notes.observeAsState(emptyList())
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        modifier = Modifier.fillMaxSize()
     ) {
         // Title
         Text(
             text = "My Notes",
             style = MaterialTheme.typography.h4,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(16.dp)
         )
 
-        LazyColumn {
+        // LazyColumn to display notes
+        LazyColumn(
+            modifier = Modifier.weight(1f)
+        ) {
             items(notesList) { note ->
                 NoteItem(note = note)
             }
@@ -66,7 +67,7 @@ fun NotesAppUI(notes: LiveData<List<Note>>, onAddNoteClick: () -> Unit) {
             onClick = onAddNoteClick,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 16.dp),
+                .padding(16.dp),
         ) {
             Text(text = "Add New Note")
         }
