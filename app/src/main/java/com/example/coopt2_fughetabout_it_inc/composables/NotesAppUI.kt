@@ -2,7 +2,10 @@ package com.example.coopt2_fughetabout_it_inc.composables
 
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,10 +15,13 @@ import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -40,8 +46,15 @@ fun <T> LiveData<T>.observeAsState(initial: T): T {
     return state.value
 }
 @Composable
-fun NotesAppUI(notes: LiveData<List<Note>>, onAddNoteClick: () -> Unit) {
+fun NotesAppUI(
+    notes: LiveData<List<Note>>,
+    onAddNoteClick: () -> Unit
+) {
     val notesList = notes.observeAsState(emptyList())
+
+    // State to track whether the user is creating a new note
+    var isCreatingNote by remember { mutableStateOf(false) }
+    var selectedNote: Note? by remember { mutableStateOf(null) }
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -58,24 +71,158 @@ fun NotesAppUI(notes: LiveData<List<Note>>, onAddNoteClick: () -> Unit) {
             modifier = Modifier.weight(1f)
         ) {
             items(notesList) { note ->
+                // Click on a note to open NoteCreationScreen
                 NoteItem(note = note)
+                {
+                    selectedNote = note
+                    isCreatingNote = true
+                }
             }
         }
 
         // Button to add a new note
         Button(
-            onClick = onAddNoteClick,
+            onClick = {
+                selectedNote = null // Clear the selected note
+                isCreatingNote = true
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
         ) {
             Text(text = "Add New Note")
         }
+
+        // Show the note creation screen when isCreatingNote is true
+        if (isCreatingNote) {
+            NoteCreationScreen(
+                note = selectedNote, // Pass the selected note
+                onNoteCreated = { newNote ->
+                    // Handle note creation and save to the database
+                    // You can call a ViewModel function here to save the note
+                    // After saving, set isCreatingNote back to false
+                    selectedNote = null
+                    isCreatingNote = false
+                },
+                onCancel = {
+                    selectedNote = null
+                    isCreatingNote = false
+                },
+                onCategoryCreate = {
+                    // Handle category creation or selection here
+                },
+                onReminderCreate = {
+                    // Handle reminder creation or selection here
+                },
+                onDelete = {
+                    // handle deleting of the note here
+                    selectedNote = null
+                    isCreatingNote = false
+                }
+            )
+        }
     }
 }
 
 @Composable
-fun NoteItem(note: Note) {
+fun NoteCreationScreen(
+    note: Note?, // nullable note parameter incase we are opening a note instead of creaating
+    onNoteCreated: (Note) -> Unit,
+    onCancel: () -> Unit,
+    onCategoryCreate: () -> Unit,
+    onReminderCreate: () -> Unit,
+    onDelete: () -> Unit
+) {
+    // Define state variables for user input
+    var title by remember { mutableStateOf("") }
+    var content by remember { mutableStateOf("") }
+    var categoryId by remember { mutableStateOf<Long?>(null) }
+    var reminderId by remember { mutableStateOf<Long?>(null) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        // Input fields for title, content, category, and reminder
+        TextField(
+            value = title,
+            onValueChange = { title = it },
+            label = { Text("Title") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        TextField(
+            value = content,
+            onValueChange = { content = it },
+            label = { Text("Content") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        // Button to select or create a category
+        Button(
+            onClick = { onCategoryCreate() }, // Corrected this line
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Select/Create Category")
+        }
+
+        // Button to select or create a reminder
+        Button(
+            onClick = { onReminderCreate() }, // Corrected this line
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Select/Create Reminder")
+        }
+
+        // Save, cancel, and delete buttons
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Button(
+                onClick = {
+                    val newNote = Note(
+                        id = note?.id ?: 0L, // Pass the id if it's an existing note
+                        title = title,
+                        content = content,
+                        categoryId = categoryId,
+                        reminderId = reminderId
+                    )
+                    onNoteCreated(newNote)
+                },
+            ) {
+                Text("Save")
+            }
+
+            // Cancel button
+            Button(
+                onClick = onCancel,
+            ) {
+                Text("Cancel")
+            }
+
+            // Delete button (show only if it's an existing note)
+            if (note != null) {
+                Button(
+                    onClick = onDelete,
+                ) {
+                    Text("Delete")
+                }
+            }
+        }
+    }
+
+}
+
+
+@Composable
+fun NoteItem(
+    note: Note,
+    onItemClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -86,6 +233,7 @@ fun NoteItem(note: Note) {
         Column(
             modifier = Modifier
                 .padding(16.dp)
+                .clickable(onClick = onItemClick)
         ) {
             Text(
                 text = note.content,
