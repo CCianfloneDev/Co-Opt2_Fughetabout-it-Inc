@@ -1,6 +1,5 @@
 package com.example.coopt2_fughetabout_it_inc.composables
 
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +12,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Button
 import androidx.compose.material.Card
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
@@ -27,6 +28,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
 import com.example.coopt2_fughetabout_it_inc.Data.Note
+import com.example.coopt2_fughetabout_it_inc.Data.Category
+import com.example.coopt2_fughetabout_it_inc.Data.Reminder
 @Composable
 fun <T> LiveData<T>.observeAsState(initial: T): T {
     val liveData = this
@@ -48,12 +51,15 @@ fun <T> LiveData<T>.observeAsState(initial: T): T {
 @Composable
 fun NotesAppUI(
     notes: LiveData<List<Note>>,
-    onAddNoteClick: () -> Unit
+    categories: LiveData<List<Category>>,
+    reminders: LiveData<List<Reminder>>
 ) {
     val notesList = notes.observeAsState(emptyList())
 
     // State to track whether the user is creating a new note
     var isCreatingNote by remember { mutableStateOf(false) }
+    var isCreatingCategory by remember { mutableStateOf(false) }
+    var isCreatingReminder by remember { mutableStateOf(false) }
     var selectedNote: Note? by remember { mutableStateOf(null) }
 
     Column(
@@ -96,7 +102,7 @@ fun NotesAppUI(
         // Show the note creation screen when isCreatingNote is true
         if (isCreatingNote) {
             NoteCreationScreen(
-                note = selectedNote, // Pass the selected note
+                note = selectedNote,
                 onNoteCreated = { newNote ->
                     // Handle note creation and save to the database
                     // You can call a ViewModel function here to save the note
@@ -109,10 +115,11 @@ fun NotesAppUI(
                     isCreatingNote = false
                 },
                 onCategoryCreate = {
-                    // Handle category creation or selection here
+                    isCreatingCategory = true
                 },
                 onReminderCreate = {
-                    // Handle reminder creation or selection here
+                    println("mexico")
+                    isCreatingReminder = true
                 },
                 onDelete = {
                     // handle deleting of the note here
@@ -121,6 +128,30 @@ fun NotesAppUI(
                 }
             )
         }
+
+        if (isCreatingCategory) {
+            println("mexico2")
+            CategorySelectionScreen(
+                categories = categories,
+                selectedCategoryId = selectedNote?.categoryId,
+                onCategorySelected = { categoryId ->
+                    // Handle category selection and update the categoryId in the note
+                    selectedNote?.categoryId = categoryId
+                    isCreatingNote = true // Return to the NoteCreationScreen
+                },
+                onCategoryCreated = { categoryName ->
+                    // Handle category creation and update the categoryId in the note
+                    // Here, you might want to add the new category to your database
+                    //val newCategoryId = createNewCategory(categoryName) // Implement this function
+                   // selectedNote?.categoryId = newCategoryId
+                    isCreatingNote = true // Return to the NoteCreationScreen
+                },
+                onCancel = {
+                    isCreatingCategory = false
+                }
+            )
+        }
+
     }
 }
 
@@ -140,9 +171,7 @@ fun NoteCreationScreen(
     var reminderId by remember { mutableStateOf<Long?>(null) }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        modifier = Modifier.fillMaxSize()
     ) {
         // Input fields for title, content, category, and reminder
         TextField(
@@ -161,7 +190,7 @@ fun NoteCreationScreen(
 
         // Button to select or create a category
         Button(
-            onClick = { onCategoryCreate() }, // Corrected this line
+            onClick = { onCategoryCreate() },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Select/Create Category")
@@ -169,7 +198,7 @@ fun NoteCreationScreen(
 
         // Button to select or create a reminder
         Button(
-            onClick = { onReminderCreate() }, // Corrected this line
+            onClick = { onReminderCreate() },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Select/Create Reminder")
@@ -217,6 +246,102 @@ fun NoteCreationScreen(
 
 }
 
+@Composable
+fun CategorySelectionScreen(
+    categories: LiveData<List<Category>>,
+    selectedCategoryId: Long?,
+    onCategorySelected: (Long) -> Unit,
+    onCategoryCreated: (String) -> Unit,
+    onCancel: () -> Unit
+) {
+    val categoriesList = categories.observeAsState(emptyList())
+    var newCategoryName by remember { mutableStateOf("") }
+    var isCreatingNewCategory by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Text(
+            text = "Select/Create Category",
+            style = MaterialTheme.typography.h5,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        // Dropdown to select an existing category
+        DropdownMenu(
+            expanded = isCreatingNewCategory.not(),
+            onDismissRequest = { isCreatingNewCategory = false }
+        ) {
+            categoriesList.forEach { category ->
+                DropdownMenuItem(
+                    onClick = {
+                        onCategorySelected(category.id)
+                        isCreatingNewCategory = false
+                    }
+                ) {
+                    Text(text = category.name)
+                }
+            }
+        }
+
+        // Button to show text field for creating a new category
+        Button(
+            onClick = { isCreatingNewCategory = true },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Add New Category")
+        }
+
+        if (isCreatingNewCategory) {
+            // Text field for entering a new category name
+            TextField(
+                value = newCategoryName,
+                onValueChange = { newCategoryName = it },
+                label = { Text("Category Name") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Save and Cancel buttons for creating a new category
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Button(
+                    onClick = {
+                        if (newCategoryName.isNotBlank()) {
+                            onCategoryCreated(newCategoryName)
+                            isCreatingNewCategory = false
+                            newCategoryName = ""
+                        }
+                    }
+                ) {
+                    Text("Save")
+                }
+
+                Button(
+                    onClick = {
+                        isCreatingNewCategory = false
+                        newCategoryName = ""
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        }
+
+        // Cancel button to return to the NoteCreationScreen
+        Button(
+            onClick = onCancel,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp)
+        ) {
+            Text("Cancel and Return to Note Creation")
+        }
+    }
+}
 
 @Composable
 fun NoteItem(
