@@ -3,6 +3,7 @@ package com.example.coopt2_fughetabout_it_inc.composables
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,7 +26,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.LiveData
 import com.example.coopt2_fughetabout_it_inc.Data.Note
 import com.example.coopt2_fughetabout_it_inc.Data.Category
@@ -48,12 +51,40 @@ fun <T> LiveData<T>.observeAsState(initial: T): T {
 
     return state.value
 }
+
+@Composable
+fun NoteItem(
+    note: Note,
+    onItemClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .background(Color.White),
+        elevation = 4.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .clickable(onClick = onItemClick)
+        ) {
+            Text(
+                text = note.content,
+                style = MaterialTheme.typography.body1,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
 @Composable
 fun NotesAppUI(
     notes: LiveData<List<Note>>,
     categories: LiveData<List<Category>>,
     reminders: LiveData<List<Reminder>>
 ) {
+    var atHomePage = true
     val notesList = notes.observeAsState(emptyList())
 
     // State to track whether the user is creating a new note
@@ -62,96 +93,115 @@ fun NotesAppUI(
     var isCreatingReminder by remember { mutableStateOf(false) }
     var selectedNote: Note? by remember { mutableStateOf(null) }
 
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // Title
-        Text(
-            text = "My Notes",
-            style = MaterialTheme.typography.h4,
-            modifier = Modifier.padding(16.dp)
-        )
+    Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // Title
+                Text(
+                    text = "My Notes",
+                    style = MaterialTheme.typography.h4,
+                    modifier = Modifier.padding(16.dp)
+                )
 
-        // LazyColumn to display notes
-        LazyColumn(
-            modifier = Modifier.weight(1f)
-        ) {
-            items(notesList) { note ->
-                // Click on a note to open NoteCreationScreen
-                NoteItem(note = note)
-                {
-                    selectedNote = note
-                    isCreatingNote = true
+                // LazyColumn to display notes
+                LazyColumn(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    items(notesList) { note ->
+                        // Click on a note to open NoteCreationScreen
+                        NoteItem(note = note)
+                        {
+                            selectedNote = note
+                            isCreatingNote = true
+                        }
+                    }
+                }
+
+                // Button to add a new note
+                Button(
+                    onClick = {
+                        selectedNote = null // Clear the selected note
+                        isCreatingNote = true
+                        atHomePage = false
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(text = "Add New Note")
                 }
             }
         }
-
-        // Button to add a new note
-        Button(
-            onClick = {
-                selectedNote = null // Clear the selected note
-                isCreatingNote = true
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-        ) {
-            Text(text = "Add New Note")
-        }
-
-        // Show the note creation screen when isCreatingNote is true
         if (isCreatingNote) {
-            NoteCreationScreen(
-                note = selectedNote,
-                onNoteCreated = { newNote ->
-                    // Handle note creation and save to the database
-                    // You can call a ViewModel function here to save the note
-                    // After saving, set isCreatingNote back to false
-                    selectedNote = null
-                    isCreatingNote = false
-                },
-                onCancel = {
-                    selectedNote = null
-                    isCreatingNote = false
-                },
-                onCategoryCreate = {
-                    isCreatingCategory = true
-                },
-                onReminderCreate = {
-                    println("mexico")
-                    isCreatingReminder = true
-                },
-                onDelete = {
-                    // handle deleting of the note here
-                    selectedNote = null
-                    isCreatingNote = false
-                }
-            )
-        }
+        Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    // Show the note creation screen when isCreatingNote is true
 
+                        NoteCreationScreen(
+                            note = selectedNote,
+                            onNoteCreated = { newNote ->
+                                // Handle note creation and save to the database
+                                // You can call a ViewModel function here to save the note
+                                // After saving, set isCreatingNote back to false
+                                selectedNote = null
+                                isCreatingNote = false
+                            },
+                            onCancel = {
+                                selectedNote = null
+                                isCreatingNote = false
+                                atHomePage = true
+                            },
+                            onCategoryCreate = {
+                                isCreatingCategory = true
+                                isCreatingNote = false
+                                atHomePage = false
+                            },
+                            onReminderCreate = {
+                                println("mexico")
+                                isCreatingReminder = true
+                            },
+                            onDelete = {
+                                // handle deleting of the note here
+                                selectedNote = null
+                                isCreatingNote = false
+                                atHomePage = true
+                            }
+                        )
+                    }
+                }
+
+            }
+        }
         if (isCreatingCategory) {
-            println("mexico2")
-            CategorySelectionScreen(
-                categories = categories,
-                selectedCategoryId = selectedNote?.categoryId,
-                onCategorySelected = { categoryId ->
-                    // Handle category selection and update the categoryId in the note
-                    selectedNote?.categoryId = categoryId
-                    isCreatingNote = true // Return to the NoteCreationScreen
-                },
-                onCategoryCreated = { categoryName ->
-                    // Handle category creation and update the categoryId in the note
-                    // Here, you might want to add the new category to your database
-                    //val newCategoryId = createNewCategory(categoryName) // Implement this function
-                   // selectedNote?.categoryId = newCategoryId
-                    isCreatingNote = true // Return to the NoteCreationScreen
-                },
-                onCancel = {
-                    isCreatingCategory = false
-                }
-            )
+            Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
+                CategorySelectionScreen(
+                    categories = categories,
+                    selectedCategoryId = selectedNote?.categoryId,
+                    onCategorySelected = { categoryId ->
+                        // Handle category selection and update the categoryId in the note
+                        selectedNote?.categoryId = categoryId
+                        isCreatingNote = true // Return to the NoteCreationScreen
+                    },
+                    onCategoryCreated = { categoryName ->
+                        // Handle category creation and update the categoryId in the note
+                        // Here, you might want to add the new category to your database
+                        //val newCategoryId = createNewCategory(categoryName) // Implement this function
+                        // selectedNote?.categoryId = newCategoryId
+                        isCreatingCategory = false
+                        isCreatingNote = true
+                    },
+                    onCancel = {
+                        isCreatingCategory = false
+                        isCreatingNote = true
+                    }
+                )
+            }
         }
-
     }
 }
 
@@ -343,28 +393,3 @@ fun CategorySelectionScreen(
     }
 }
 
-@Composable
-fun NoteItem(
-    note: Note,
-    onItemClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .background(Color.White),
-        elevation = 4.dp
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .clickable(onClick = onItemClick)
-        ) {
-            Text(
-                text = note.content,
-                style = MaterialTheme.typography.body1,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-    }
-}
