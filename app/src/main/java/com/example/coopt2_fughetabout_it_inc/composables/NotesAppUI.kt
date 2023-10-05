@@ -84,7 +84,6 @@ fun NotesAppUI(
     categories: LiveData<List<Category>>,
     reminders: LiveData<List<Reminder>>
 ) {
-    var atHomePage = true
     val notesList = notes.observeAsState(emptyList())
 
     // State to track whether the user is creating a new note
@@ -124,7 +123,6 @@ fun NotesAppUI(
                     onClick = {
                         selectedNote = null // Clear the selected note
                         isCreatingNote = true
-                        atHomePage = false
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -154,22 +152,21 @@ fun NotesAppUI(
                             onCancel = {
                                 selectedNote = null
                                 isCreatingNote = false
-                                atHomePage = true
                             },
                             onCategoryCreate = {
                                 isCreatingCategory = true
                                 isCreatingNote = false
-                                atHomePage = false
+                                isCreatingReminder = false
                             },
                             onReminderCreate = {
-                                println("mexico")
                                 isCreatingReminder = true
+                                isCreatingNote = false
+                                isCreatingCategory = false
                             },
                             onDelete = {
                                 // handle deleting of the note here
                                 selectedNote = null
                                 isCreatingNote = false
-                                atHomePage = true
                             }
                         )
                     }
@@ -197,6 +194,32 @@ fun NotesAppUI(
                     },
                     onCancel = {
                         isCreatingCategory = false
+                        isCreatingNote = true
+                    }
+                )
+            }
+        }
+
+        if (isCreatingReminder) {
+            Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
+                ReminderSelectionScreen(
+                    reminders = reminders,
+                    selectedReminderId = selectedNote?.reminderId,
+                    onReminderSelected = { reminderId ->
+                        // Handle reminder selection and update the reminderId in the note
+                        selectedNote?.reminderId = reminderId
+                        isCreatingNote = true // Return to the NoteCreationScreen
+                    },
+                    onReminderCreated = { reminderDateTime ->
+                        // Handle category creation and update the categoryId in the note
+                        // Here, you might want to add the new category to your database
+                        //val newCategoryId = createNewCategory(categoryName) // Implement this function
+                        // selectedNote?.categoryId = newCategoryId
+                        isCreatingReminder = false
+                        isCreatingNote = true
+                    },
+                    onCancel = {
+                        isCreatingReminder = false
                         isCreatingNote = true
                     }
                 )
@@ -374,6 +397,103 @@ fun CategorySelectionScreen(
                     onClick = {
                         isCreatingNewCategory = false
                         newCategoryName = ""
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        }
+
+        // Cancel button to return to the NoteCreationScreen
+        Button(
+            onClick = onCancel,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp)
+        ) {
+            Text("Cancel and Return to Note Creation")
+        }
+    }
+}
+
+@Composable
+fun ReminderSelectionScreen(
+    reminders: LiveData<List<Reminder>>,
+    selectedReminderId: Long?,
+    onReminderSelected: (Long) -> Unit,
+    onReminderCreated: (String) -> Unit,
+    onCancel: () -> Unit
+) {
+    val remindersList = reminders.observeAsState(emptyList())
+    var newReminderDateTime by remember { mutableStateOf("") }
+    var isCreatingNewReminder by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Text(
+            text = "Select/Create Reminder",
+            style = MaterialTheme.typography.h5,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        // Dropdown to select an existing reminder
+        DropdownMenu(
+            expanded = isCreatingNewReminder.not(),
+            onDismissRequest = { isCreatingNewReminder = false }
+        ) {
+            remindersList.forEach { reminder ->
+                DropdownMenuItem(
+                    onClick = {
+                        onReminderSelected(reminder.id)
+                        isCreatingNewReminder = false
+                    }
+                ) {
+                    Text(text = reminder.dateTime)
+                }
+            }
+        }
+
+        // Button to show text field for creating a new reminder
+        Button(
+            onClick = { isCreatingNewReminder = true },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Add New Reminder")
+        }
+
+        if (isCreatingNewReminder) {
+            // Text field for entering a new reminder name
+            TextField(
+                value = newReminderDateTime,
+                onValueChange = { newReminderDateTime = it },
+                label = { Text("Date/Time as a string") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Save and Cancel buttons for creating a new category
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Button(
+                    onClick = {
+                        if (newReminderDateTime.isNotBlank()) {
+                            onReminderCreated(newReminderDateTime)
+                            isCreatingNewReminder = false
+                            newReminderDateTime = ""
+                        }
+                    }
+                ) {
+                    Text("Save")
+                }
+
+                Button(
+                    onClick = {
+                        isCreatingNewReminder = false
+                        newReminderDateTime = ""
                     }
                 ) {
                     Text("Cancel")
