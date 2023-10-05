@@ -20,14 +20,20 @@ abstract class AppDatabase : RoomDatabase() {
 
         // getDatabase provides access to the DB
         fun getDatabase(context: Context): AppDatabase {
+            // Check if an instance already exists
+            println("yo it got")
             return instance ?: synchronized(this) {
-                val db = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java, "app_database"
-                ).build()
-                instance = db
-                db
+                instance ?: buildDatabase(context).also { instance = it }
             }
+        }
+
+        private fun buildDatabase(context: Context): AppDatabase {
+            // Create and return the database instance
+            println("yo it built")
+            return Room.databaseBuilder(
+                context.applicationContext,
+                AppDatabase::class.java, "app_database"
+            ).build()
         }
     }
 }

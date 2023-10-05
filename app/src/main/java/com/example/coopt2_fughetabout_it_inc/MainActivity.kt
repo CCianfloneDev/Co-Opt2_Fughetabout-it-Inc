@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.Observer
 import com.example.coopt2_fughetabout_it_inc.Data.Note
 import com.example.coopt2_fughetabout_it_inc.composables.NotesAppUI
 import androidx.lifecycle.ViewModelProvider
@@ -26,9 +27,19 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // Initialize the AppDatabase and get the NoteDao instance
+        AppDatabase.getDatabase(this)
         val appDatabase = AppDatabase.getDatabase(applicationContext)
         noteDao = appDatabase.noteDao()
+        val allNotes = noteDao.getAllNotes()
 
+        allNotes.observe(this, Observer { notes ->
+            for (note in notes) {
+                println("Note ID: ${note.id}")
+                println("Title: ${note.title}")
+                println("Content: ${note.content}")
+                // Print other properties as needed
+            }
+        })
         // Initialize the ViewModel
         notesViewModel = ViewModelProvider(
             this,
@@ -48,6 +59,8 @@ class MainActivity : ComponentActivity() {
                         reminderId = null
                     )
                     notesViewModel.insertOrUpdate(newNote)
+                    println("yo it ran")
+                    println(notesViewModel.allNotes.toString())
                 }
             )
         }
