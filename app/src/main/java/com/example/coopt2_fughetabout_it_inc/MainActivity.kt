@@ -14,10 +14,8 @@ import androidx.lifecycle.Observer
 import com.example.coopt2_fughetabout_it_inc.Data.Note
 import com.example.coopt2_fughetabout_it_inc.composables.NotesAppUI
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.coopt2_fughetabout_it_inc.Data.AppDatabase
 import com.example.coopt2_fughetabout_it_inc.Data.NoteDao
-import androidx.room.Room
 
 
 class MainActivity : ComponentActivity() {
@@ -27,9 +25,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // Initialize the AppDatabase and get the NoteDao instance
-        AppDatabase.getDatabase(this)
         val appDatabase = AppDatabase.getDatabase(applicationContext)
         noteDao = appDatabase.noteDao()
+
+        // Initialize the ViewModel
+        notesViewModel = ViewModelProvider(
+            this,
+            NotesViewModelFactory(noteDao)
+        ).get(NotesViewModel::class.java)
         val allNotes = noteDao.getAllNotes()
 
         allNotes.observe(this, Observer { notes ->
@@ -40,16 +43,10 @@ class MainActivity : ComponentActivity() {
                 // Print other properties as needed
             }
         })
-        // Initialize the ViewModel
-        notesViewModel = ViewModelProvider(
-            this,
-            NotesViewModelFactory(noteDao)
-        ).get(NotesViewModel::class.java)
-
         // Set the content view with NotesAppUI
         setContent {
             NotesAppUI(
-                notes = notesViewModel.allNotes.value ?: emptyList(),
+                notes = allNotes ,
                 onAddNoteClick = {
                     // Handle the click action to add a new note
                     val newNote = Note(
