@@ -10,4 +10,10 @@ interface ReminderDao {
 
     @Insert
     suspend fun insert(reminder: Reminder)
+
+    @Update
+    suspend fun update(reminder: Reminder)
+
+    @Delete
+    suspend fun delete(reminder: Reminder)
 }

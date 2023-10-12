@@ -80,5 +80,4 @@ dependencies {
     implementation("androidx.compose.runtime:runtime:1.5.2")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
     implementation("androidx.activity:activity-compose:1.7.2")
-
 }
