@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Button
@@ -24,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.modifier.modifierLocalConsumer
@@ -133,7 +135,9 @@ fun NotesAppUI(
             }
         }
         if (isCreatingNote) {
-        Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)) {
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -175,7 +179,9 @@ fun NotesAppUI(
             }
         }
         if (isCreatingCategory) {
-            Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)) {
                 CategorySelectionScreen(
                     categories = categories,
                     selectedCategoryId = selectedNote?.categoryId,
@@ -201,7 +207,9 @@ fun NotesAppUI(
         }
 
         if (isCreatingReminder) {
-            Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)) {
                 ReminderSelectionScreen(
                     reminders = reminders,
                     selectedReminderId = selectedNote?.reminderId,
@@ -330,89 +338,104 @@ fun CategorySelectionScreen(
     val categoriesList = categories.observeAsState(emptyList())
     var newCategoryName by remember { mutableStateOf("") }
     var isCreatingNewCategory by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Text(
-            text = "Select/Create Category",
-            style = MaterialTheme.typography.h5,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
-        // Dropdown to select an existing category
-        DropdownMenu(
-            expanded = isCreatingNewCategory.not(),
-            onDismissRequest = { isCreatingNewCategory = false }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
         ) {
-            categoriesList.forEach { category ->
-                DropdownMenuItem(
-                    onClick = {
-                        onCategorySelected(category.id)
-                        isCreatingNewCategory = false
-                    }
-                ) {
-                    Text(text = category.name)
-                }
-            }
-        }
-
-        // Button to show text field for creating a new category
-        Button(
-            onClick = { isCreatingNewCategory = true },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Add New Category")
-        }
-
-        if (isCreatingNewCategory) {
-            // Text field for entering a new category name
-            TextField(
-                value = newCategoryName,
-                onValueChange = { newCategoryName = it },
-                label = { Text("Category Name") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            // Save and Cancel buttons for creating a new category
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                Button(
-                    onClick = {
-                        if (newCategoryName.isNotBlank()) {
-                            onCategoryCreated(newCategoryName)
-                            isCreatingNewCategory = false
-                            newCategoryName = ""
+
+                Text(
+                    text = "Select/Create Category",
+                    style = MaterialTheme.typography.h5,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Text(
+                    "Pick a category", modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = { expanded = true })
+                        .background(
+                            Color.Gray
+                        )
+                )
+                // Dropdown to select an existing category
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { isCreatingNewCategory = false }
+                ) {
+                    categoriesList.forEach { category ->
+                        DropdownMenuItem(
+                            onClick = {
+                                onCategorySelected(category.id)
+                                isCreatingNewCategory = false
+                            }
+                        ) {
+                            Text(text = category.name)
                         }
                     }
-                ) {
-                    Text("Save")
                 }
 
+                // Button to show text field for creating a new category
                 Button(
-                    onClick = {
-                        isCreatingNewCategory = false
-                        newCategoryName = ""
-                    }
+                    onClick = { isCreatingNewCategory = true },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Cancel")
+                    Text("Add New Category")
+                }
+
+                if (isCreatingNewCategory) {
+                    // Text field for entering a new category name
+                    TextField(
+                        value = newCategoryName,
+                        onValueChange = { newCategoryName = it },
+                        label = { Text("Category Name") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    // Save and Cancel buttons for creating a new category
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Button(
+                            onClick = {
+                                if (newCategoryName.isNotBlank()) {
+                                    onCategoryCreated(newCategoryName)
+                                    isCreatingNewCategory = false
+                                    newCategoryName = ""
+                                }
+                            }
+                        ) {
+                            Text("Save")
+                        }
+
+                        Button(
+                            onClick = {
+                                isCreatingNewCategory = false
+                                newCategoryName = ""
+                            }
+                        ) {
+                            Text("Cancel")
+                        }
+                    }
+                }
+
+                // Cancel button to return to the NoteCreationScreen
+                Button(
+                    onClick = onCancel,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                ) {
+                    Text("Cancel and Return to Note Creation")
                 }
             }
-        }
-
-        // Cancel button to return to the NoteCreationScreen
-        Button(
-            onClick = onCancel,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp)
-        ) {
-            Text("Cancel and Return to Note Creation")
-        }
     }
 }
 
@@ -427,88 +450,102 @@ fun ReminderSelectionScreen(
     val remindersList = reminders.observeAsState(emptyList())
     var newReminderDateTime by remember { mutableStateOf("") }
     var isCreatingNewReminder by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier.fillMaxSize()
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
     ) {
-        Text(
-            text = "Select/Create Reminder",
-            style = MaterialTheme.typography.h5,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
 
-        // Dropdown to select an existing reminder
-        DropdownMenu(
-            expanded = isCreatingNewReminder.not(),
-            onDismissRequest = { isCreatingNewReminder = false }
+        Column(
+            modifier = Modifier.fillMaxSize()
         ) {
-            remindersList.forEach { reminder ->
-                DropdownMenuItem(
-                    onClick = {
-                        onReminderSelected(reminder.id)
-                        isCreatingNewReminder = false
+            Text(
+                text = "Select/Create Reminder",
+                style = MaterialTheme.typography.h5,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            Text(
+                "Pick a reminder", modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = { expanded = true })
+                    .background(
+                        Color.Gray
+                    )
+            )
+            // Dropdown to select an existing reminder
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { isCreatingNewReminder = false }
+            ) {
+                remindersList.forEach { reminder ->
+                    DropdownMenuItem(
+                        onClick = {
+                            onReminderSelected(reminder.id)
+                            isCreatingNewReminder = false
+                        }
+                    ) {
+                        Text(text = reminder.dateTime)
                     }
-                ) {
-                    Text(text = reminder.dateTime)
                 }
             }
-        }
 
-        // Button to show text field for creating a new reminder
-        Button(
-            onClick = { isCreatingNewReminder = true },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Add New Reminder")
-        }
-
-        if (isCreatingNewReminder) {
-            // Text field for entering a new reminder name
-            TextField(
-                value = newReminderDateTime,
-                onValueChange = { newReminderDateTime = it },
-                label = { Text("Date/Time as a string") },
+            // Button to show text field for creating a new reminder
+            Button(
+                onClick = { isCreatingNewReminder = true },
                 modifier = Modifier.fillMaxWidth()
-            )
-
-            // Save and Cancel buttons for creating a new category
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Button(
-                    onClick = {
-                        if (newReminderDateTime.isNotBlank()) {
-                            onReminderCreated(newReminderDateTime)
+                Text("Add New Reminder")
+            }
+
+            if (isCreatingNewReminder) {
+                // Text field for entering a new reminder name
+                TextField(
+                    value = newReminderDateTime,
+                    onValueChange = { newReminderDateTime = it },
+                    label = { Text("Date/Time as a string") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Save and Cancel buttons for creating a new category
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Button(
+                        onClick = {
+                            if (newReminderDateTime.isNotBlank()) {
+                                onReminderCreated(newReminderDateTime)
+                                isCreatingNewReminder = false
+                                newReminderDateTime = ""
+                            }
+                        }
+                    ) {
+                        Text("Save")
+                    }
+
+                    Button(
+                        onClick = {
                             isCreatingNewReminder = false
                             newReminderDateTime = ""
                         }
+                    ) {
+                        Text("Cancel")
                     }
-                ) {
-                    Text("Save")
-                }
-
-                Button(
-                    onClick = {
-                        isCreatingNewReminder = false
-                        newReminderDateTime = ""
-                    }
-                ) {
-                    Text("Cancel")
                 }
             }
-        }
 
-        // Cancel button to return to the NoteCreationScreen
-        Button(
-            onClick = onCancel,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp)
-        ) {
-            Text("Cancel and Return to Note Creation")
+            // Cancel button to return to the NoteCreationScreen
+            Button(
+                onClick = onCancel,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+            ) {
+                Text("Cancel and Return to Note Creation")
+            }
         }
     }
 }
