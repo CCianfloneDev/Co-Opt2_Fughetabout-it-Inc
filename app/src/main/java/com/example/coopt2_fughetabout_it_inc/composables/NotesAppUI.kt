@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Button
@@ -25,16 +24,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.lifecycle.LiveData
 import com.example.coopt2_fughetabout_it_inc.Data.Note
 import com.example.coopt2_fughetabout_it_inc.Data.Category
+import com.example.coopt2_fughetabout_it_inc.Data.CategoryDao
+import com.example.coopt2_fughetabout_it_inc.Data.NoteDao
 import com.example.coopt2_fughetabout_it_inc.Data.Reminder
+import com.example.coopt2_fughetabout_it_inc.Data.ReminderDao
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
 @Composable
 fun <T> LiveData<T>.observeAsState(initial: T): T {
     val liveData = this
@@ -82,11 +84,11 @@ fun NoteItem(
 
 @Composable
 fun NotesAppUI(
-    notes: LiveData<List<Note>>,
-    categories: LiveData<List<Category>>,
-    reminders: LiveData<List<Reminder>>
+    noteDao: NoteDao,
+    categoryDao: CategoryDao,
+    reminderDao: ReminderDao
 ) {
-    val notesList = notes.observeAsState(emptyList())
+    val notesList = noteDao.getAllNotes().observeAsState(emptyList())
 
     // State to track whether the user is creating a new note
     var isCreatingNote by remember { mutableStateOf(false) }
@@ -183,7 +185,7 @@ fun NotesAppUI(
                 .fillMaxSize()
                 .background(Color.White)) {
                 CategorySelectionScreen(
-                    categories = categories,
+                    categories = categoryDao.getAllCategories(),
                     selectedCategoryId = selectedNote?.categoryId,
                     onCategorySelected = { categoryId ->
                         // Handle category selection and update the categoryId in the note
@@ -191,9 +193,12 @@ fun NotesAppUI(
                         isCreatingNote = true // Return to the NoteCreationScreen
                     },
                     onCategoryCreated = { categoryName ->
-                        // Handle category creation and update the categoryId in the note
-                        // Here, you might want to add the new category to your database
-                        val newCategoryId = createNewCategory(categoryName) // Implement this function
+                        val category = Category(name = categoryName)
+                        println(categoryName)
+
+                        categoryDao.insert(category)
+                        // Call your DAO function to insert the category into the database
+
                         // selectedNote?.categoryId = newCategoryId
                         isCreatingCategory = false
                         isCreatingNote = true
@@ -211,7 +216,7 @@ fun NotesAppUI(
                 .fillMaxSize()
                 .background(Color.White)) {
                 ReminderSelectionScreen(
-                    reminders = reminders,
+                    reminders = reminderDao.getAllReminders(),
                     selectedReminderId = selectedNote?.reminderId,
                     onReminderSelected = { reminderId ->
                         // Handle reminder selection and update the reminderId in the note
