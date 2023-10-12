@@ -193,7 +193,7 @@ fun NotesAppUI(
                     onCategoryCreated = { categoryName ->
                         // Handle category creation and update the categoryId in the note
                         // Here, you might want to add the new category to your database
-                        //val newCategoryId = createNewCategory(categoryName) // Implement this function
+                        val newCategoryId = createNewCategory(categoryName) // Implement this function
                         // selectedNote?.categoryId = newCategoryId
                         isCreatingCategory = false
                         isCreatingNote = true
