@@ -12,7 +12,7 @@ interface NoteDao {
     suspend fun insert(note: Note)
 
     @Update
-    suspend fun update(note: Note)
+    suspend fun update(note: Note?)
 
     @Delete
     suspend fun delete(note: Note)
