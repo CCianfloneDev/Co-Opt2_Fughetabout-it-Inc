@@ -148,55 +148,65 @@ fun NotesAppUI(
                 }
             }
         }
-        if (isCreatingNote) {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    // Show the note creation screen when isCreatingNote is true
+        if (isCreatingNote)
+        {
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White))
+            {
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Box(modifier = Modifier
+                        .fillMaxSize())
+                    {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.White)
+                        ) {
+                            // Show the note creation screen when isCreatingNote is true
+                            NoteCreationScreen(
+                                note = selectedNote,
+                                onNoteCreated = { newNote ->
+                                    val note = Note(
+                                        title = newNote.title, content = newNote.content,
+                                        categoryId = newNote.categoryId, reminderId = newNote.reminderId
+                                    )
 
-                        NoteCreationScreen(
-                            note = selectedNote,
-                            onNoteCreated = { newNote ->
-                                val note = Note(title = newNote.title, content = newNote.content,
-                                    categoryId = newNote.categoryId, reminderId = newNote.reminderId)
+                                    GlobalScope.launch(Dispatchers.Main) { noteDao.insert(note) }
+                                    selectedNote = null
+                                    isCreatingNote = false
+                                },
+                                onNoteEdited = { editNote ->
+                                    GlobalScope.launch(Dispatchers.Main) { noteDao.update(editNote) }
 
-                                GlobalScope.launch (Dispatchers.Main) { noteDao.insert(note) }
-                                selectedNote = null
-                                isCreatingNote = false
-                            },
-                            onNoteEdited = { editNote ->
-                                GlobalScope.launch (Dispatchers.Main) { noteDao.update(editNote) }
-
-                                selectedNote = null
-                                isCreatingNote = false
-                            },
-                            onCancel = {
-                                selectedNote = null
-                                isCreatingNote = false
-                            },
-                            onCategoryCreate = {
-                                isCreatingCategory = true
-                                isCreatingNote = false
-                                isCreatingReminder = false
-                            },
-                            onReminderCreate = {
-                                isCreatingReminder = true
-                                isCreatingNote = false
-                                isCreatingCategory = false
-                            },
-                            onDelete = {
-                                // handle deleting of the note here
-                                selectedNote = null
-                                isCreatingNote = false
-                            }
-                        )
+                                    selectedNote = null
+                                    isCreatingNote = false
+                                },
+                                onCancel = {
+                                    selectedNote = null
+                                    isCreatingNote = false
+                                },
+                                onCategoryCreate = {
+                                    isCreatingCategory = true
+                                    isCreatingNote = false
+                                    isCreatingReminder = false
+                                },
+                                onReminderCreate = {
+                                    isCreatingReminder = true
+                                    isCreatingNote = false
+                                    isCreatingCategory = false
+                                },
+                                onDelete = {
+                                    // handle deleting of the note here
+                                    selectedNote = null
+                                    isCreatingNote = false
+                                }
+                            )
+                        }
                     }
                 }
-
             }
         }
         if (isCreatingCategory) {
@@ -281,18 +291,18 @@ fun NoteCreationScreen(
         modifier = Modifier.fillMaxSize()
     ) {
         // Input fields for title, content, category, and reminder
-            TextField(
-                value = title,
-                onValueChange = { title = it },
-                label = { Text("Title") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            TextField(
-                value = content,
-                onValueChange = { content = it },
-                label = { Text("Content") },
-                modifier = Modifier.fillMaxWidth()
-            )
+        TextField(
+            value = title,
+            onValueChange = { title = it },
+            label = { Text("Title") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        TextField(
+            value = content,
+            onValueChange = { content = it },
+            label = { Text("Content") },
+            modifier = Modifier.fillMaxWidth()
+        )
 
         // Button to select or create a category
         Button(
@@ -366,7 +376,6 @@ fun NoteCreationScreen(
             }
         }
     }
-
 }
 
 @Composable
