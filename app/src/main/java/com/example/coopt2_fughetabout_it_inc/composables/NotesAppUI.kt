@@ -1,5 +1,6 @@
 package com.example.coopt2_fughetabout_it_inc.composables
 
+import android.widget.EditText
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.DropdownMenu
@@ -39,6 +41,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.time.format.TextStyle
 
 @Composable
 fun <T> LiveData<T>.observeAsState(initial: T): T {
@@ -263,47 +266,27 @@ fun NoteCreationScreen(
     onDelete: () -> Unit
 ) {
     // Define state variables for user input
-    var title by remember { mutableStateOf("") }
-    var content by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf(note?.title ?: "") }
+    var content by remember { mutableStateOf(note?.content ?: "") }
     var categoryId by remember { mutableStateOf<Long?>(null) }
     var reminderId by remember { mutableStateOf<Long?>(null) }
-
 
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
         // Input fields for title, content, category, and reminder
-        if (note == null) {
             TextField(
                 value = title,
                 onValueChange = { title = it },
                 label = { Text("Title") },
                 modifier = Modifier.fillMaxWidth()
             )
-        } else {
-            TextField(
-                value = note.title,
-                onValueChange = { title = it},
-                label = { Text("Title") },
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        if (note == null) {
             TextField(
                 value = content,
                 onValueChange = { content = it },
                 label = { Text("Content") },
                 modifier = Modifier.fillMaxWidth()
             )
-        } else {
-            TextField(
-                value = note.content,
-                onValueChange = { content = it },
-                label = { Text("Content") },
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
 
         // Button to select or create a category
         Button(
