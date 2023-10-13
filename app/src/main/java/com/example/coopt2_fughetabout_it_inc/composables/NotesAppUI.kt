@@ -268,28 +268,42 @@ fun NoteCreationScreen(
     var categoryId by remember { mutableStateOf<Long?>(null) }
     var reminderId by remember { mutableStateOf<Long?>(null) }
 
-    if (note != null) {
-        title = note.title
-        content = note.content
-    }
 
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
         // Input fields for title, content, category, and reminder
-        TextField(
-            value = title,
-            onValueChange = { title = it },
-            label = { Text("Title") },
-            modifier = Modifier.fillMaxWidth()
-        )
+        if (note == null) {
+            TextField(
+                value = title,
+                onValueChange = { title = it },
+                label = { Text("Title") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        } else {
+            TextField(
+                value = note.title,
+                onValueChange = { title = it},
+                label = { Text("Title") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
-        TextField(
-            value = content,
-            onValueChange = { content = it },
-            label = { Text("Content") },
-            modifier = Modifier.fillMaxWidth()
-        )
+        if (note == null) {
+            TextField(
+                value = content,
+                onValueChange = { content = it },
+                label = { Text("Content") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        } else {
+            TextField(
+                value = note.content,
+                onValueChange = { content = it },
+                label = { Text("Content") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
         // Button to select or create a category
         Button(
@@ -329,6 +343,10 @@ fun NoteCreationScreen(
                         )
                         onNoteCreated(newNote)
                     } else {
+                        note.title = title
+                        note.content = content
+                        note.categoryId = categoryId
+                        note.reminderId = reminderId
                         onNoteEdited(note)
                     }
 
