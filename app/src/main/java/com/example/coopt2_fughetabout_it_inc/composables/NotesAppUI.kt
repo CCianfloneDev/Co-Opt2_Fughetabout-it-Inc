@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -26,9 +28,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Popup
 import androidx.lifecycle.LiveData
 import com.example.coopt2_fughetabout_it_inc.Data.Note
 import com.example.coopt2_fughetabout_it_inc.Data.Category
@@ -379,97 +385,109 @@ fun CategorySelectionScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(16.dp)
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
-
-                Text(
-                    text = "Select/Create Category",
-                    style = MaterialTheme.typography.h5,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                Text(
-                    "Pick a category", modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(onClick = { expanded = true })
-                        .background(
-                            Color.Gray
-                        )
-                )
-                // Dropdown to select an existing category
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
+            Card (
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .padding(16.dp)
+            ){
+                Column(
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    categoriesList.forEach { category ->
-                        DropdownMenuItem(
-                            onClick = {
-                                onCategorySelected(category.id)
-                                isCreatingNewCategory = false
-                            }
-                        ) {
-                            Text(text = category.name)
-                        }
-                    }
-                }
 
-                // Button to show text field for creating a new category
-                Button(
-                    onClick = { isCreatingNewCategory = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Add New Category")
-                }
-
-                if (isCreatingNewCategory) {
-                    // Text field for entering a new category name
-                    TextField(
-                        value = newCategoryName,
-                        onValueChange = { newCategoryName = it },
-                        label = { Text("Category Name") },
-                        modifier = Modifier.fillMaxWidth()
+                    Text(
+                        text = "Select/Create Category",
+                        style = MaterialTheme.typography.h5,
+                        modifier = Modifier.padding(bottom = 16.dp)
                     )
 
-                    // Save and Cancel buttons for creating a new category
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    Box(
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Button(
-                            onClick = {
-                                if (newCategoryName.isNotBlank()) {
-                                    onCategoryCreated(newCategoryName)
+                        Text(
+                            "Pick a category", modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(onClick = { expanded = true })
+                                .background(Color.LightGray)
+                        )
+
+                        // Dropdown to select an existing category
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            categoriesList.forEach { category ->
+                                DropdownMenuItem(
+                                    onClick = {
+                                        onCategorySelected(category.id)
+                                        isCreatingNewCategory = false
+                                    }
+                                ) {
+                                    Text(text = category.name)
+                                }
+                            }
+                        }
+
+                    }
+
+                    // Button to show text field for creating a new category
+                    Button(
+                        onClick = { isCreatingNewCategory = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Add New Category")
+                    }
+
+                    if (isCreatingNewCategory) {
+                        // Text field for entering a new category name
+                        TextField(
+                            value = newCategoryName,
+                            onValueChange = { newCategoryName = it },
+                            label = { Text("Category Name") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        // Save and Cancel buttons for creating a new category
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Button(
+                                onClick = {
+                                    if (newCategoryName.isNotBlank()) {
+                                        onCategoryCreated(newCategoryName)
+                                        isCreatingNewCategory = false
+                                        newCategoryName = ""
+                                    }
+                                }
+                            ) {
+                                Text("Save")
+                            }
+
+                            Button(
+                                onClick = {
                                     isCreatingNewCategory = false
                                     newCategoryName = ""
                                 }
+                            ) {
+                                Text("Cancel")
                             }
-                        ) {
-                            Text("Save")
-                        }
-
-                        Button(
-                            onClick = {
-                                isCreatingNewCategory = false
-                                newCategoryName = ""
-                            }
-                        ) {
-                            Text("Cancel")
                         }
                     }
-                }
 
-                // Cancel button to return to the NoteCreationScreen
-                Button(
-                    onClick = onCancel,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp)
-                ) {
-                    Text("Cancel and Return to Note Creation")
+                    // Cancel button to return to the NoteCreationScreen
+                    Button(
+                        onClick = onCancel,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp)
+                    ) {
+                        Text("Cancel and Return to Note Creation")
+                    }
                 }
             }
     }
