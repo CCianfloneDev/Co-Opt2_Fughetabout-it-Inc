@@ -32,7 +32,7 @@ class CategoriesViewModel(
 
     val allCategories: LiveData<List<Category>> = categoryDao.getAllCategories()
 
-    public fun insertOrUpdate(category: Category) {
+     fun insertOrUpdate(category: Category) {
         viewModelScope.launch {
             if (category.id == 0L) {
                 categoryDao.insert(category)

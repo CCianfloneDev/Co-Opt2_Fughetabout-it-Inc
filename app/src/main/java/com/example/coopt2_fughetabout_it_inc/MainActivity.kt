@@ -47,7 +47,7 @@ class MainActivity : ComponentActivity() {
         remindersViewModel = ViewModelProvider(
             this,
             RemindersViewModelFactory(reminderDao)
-        ).get(remindersViewModel::class.java)
+        ).get(RemindersViewModel::class.java)
 
         val allNotes = noteDao.getAllNotes()
         val allCategories = categoryDao.getAllCategories()

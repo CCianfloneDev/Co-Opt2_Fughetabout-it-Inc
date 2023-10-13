@@ -34,7 +34,10 @@ import com.example.coopt2_fughetabout_it_inc.Data.CategoryDao
 import com.example.coopt2_fughetabout_it_inc.Data.NoteDao
 import com.example.coopt2_fughetabout_it_inc.Data.Reminder
 import com.example.coopt2_fughetabout_it_inc.Data.ReminderDao
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 @Composable
@@ -82,6 +85,7 @@ fun NoteItem(
     }
 }
 
+@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun NotesAppUI(
     noteDao: NoteDao,
@@ -196,7 +200,7 @@ fun NotesAppUI(
                         val category = Category(name = categoryName)
                         println(categoryName)
 
-                        categoryDao.insert(category)
+                        GlobalScope.launch (Dispatchers.Main) { categoryDao.insert(category) }
                         // Call your DAO function to insert the category into the database
 
                         // selectedNote?.categoryId = newCategoryId
@@ -370,7 +374,7 @@ fun CategorySelectionScreen(
                 // Dropdown to select an existing category
                 DropdownMenu(
                     expanded = expanded,
-                    onDismissRequest = { isCreatingNewCategory = false }
+                    onDismissRequest = { expanded = false }
                 ) {
                     categoriesList.forEach { category ->
                         DropdownMenuItem(
