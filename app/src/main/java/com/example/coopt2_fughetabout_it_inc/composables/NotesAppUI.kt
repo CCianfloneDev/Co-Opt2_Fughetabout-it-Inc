@@ -1,5 +1,6 @@
 package com.example.coopt2_fughetabout_it_inc.composables
 
+import android.widget.EditText
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -9,9 +10,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.DropdownMenu
@@ -25,16 +26,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.lifecycle.LiveData
 import com.example.coopt2_fughetabout_it_inc.Data.Note
 import com.example.coopt2_fughetabout_it_inc.Data.Category
+import com.example.coopt2_fughetabout_it_inc.Data.CategoryDao
+import com.example.coopt2_fughetabout_it_inc.Data.NoteDao
 import com.example.coopt2_fughetabout_it_inc.Data.Reminder
+import com.example.coopt2_fughetabout_it_inc.Data.ReminderDao
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import java.time.format.TextStyle
+
 @Composable
 fun <T> LiveData<T>.observeAsState(initial: T): T {
     val liveData = this
@@ -57,7 +65,7 @@ fun <T> LiveData<T>.observeAsState(initial: T): T {
 @Composable
 fun NoteItem(
     note: Note,
-    onItemClick: () -> Unit
+    onItemClick: (Note) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -69,10 +77,10 @@ fun NoteItem(
         Column(
             modifier = Modifier
                 .padding(16.dp)
-                .clickable(onClick = onItemClick)
+                .clickable(onClick = { onItemClick(note) })
         ) {
             Text(
-                text = note.content,
+                text = note.title,
                 style = MaterialTheme.typography.body1,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -80,13 +88,14 @@ fun NoteItem(
     }
 }
 
+@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun NotesAppUI(
-    notes: LiveData<List<Note>>,
-    categories: LiveData<List<Category>>,
-    reminders: LiveData<List<Reminder>>
+    noteDao: NoteDao,
+    categoryDao: CategoryDao,
+    reminderDao: ReminderDao
 ) {
-    val notesList = notes.observeAsState(emptyList())
+    val notesList = noteDao.getAllNotes().observeAsState(emptyList())
 
     // State to track whether the user is creating a new note
     var isCreatingNote by remember { mutableStateOf(false) }
@@ -111,7 +120,6 @@ fun NotesAppUI(
                     modifier = Modifier.weight(1f)
                 ) {
                     items(notesList) { note ->
-                        // Click on a note to open NoteCreationScreen
                         NoteItem(note = note)
                         {
                             selectedNote = note
@@ -147,9 +155,16 @@ fun NotesAppUI(
                         NoteCreationScreen(
                             note = selectedNote,
                             onNoteCreated = { newNote ->
-                                // Handle note creation and save to the database
-                                // You can call a ViewModel function here to save the note
-                                // After saving, set isCreatingNote back to false
+                                val note = Note(title = newNote.title, content = newNote.content,
+                                    categoryId = newNote.categoryId, reminderId = newNote.reminderId)
+
+                                GlobalScope.launch (Dispatchers.Main) { noteDao.insert(note) }
+                                selectedNote = null
+                                isCreatingNote = false
+                            },
+                            onNoteEdited = { editNote ->
+                                GlobalScope.launch (Dispatchers.Main) { noteDao.update(editNote) }
+
                                 selectedNote = null
                                 isCreatingNote = false
                             },
@@ -183,7 +198,7 @@ fun NotesAppUI(
                 .fillMaxSize()
                 .background(Color.White)) {
                 CategorySelectionScreen(
-                    categories = categories,
+                    categories = categoryDao.getAllCategories(),
                     selectedCategoryId = selectedNote?.categoryId,
                     onCategorySelected = { categoryId ->
                         // Handle category selection and update the categoryId in the note
@@ -191,10 +206,12 @@ fun NotesAppUI(
                         isCreatingNote = true // Return to the NoteCreationScreen
                     },
                     onCategoryCreated = { categoryName ->
-                        // Handle category creation and update the categoryId in the note
-                        // Here, you might want to add the new category to your database
-                        //val newCategoryId = createNewCategory(categoryName) // Implement this function
-                        // selectedNote?.categoryId = newCategoryId
+                        val category = Category(name = categoryName)
+                        //println(categoryName)
+
+                        GlobalScope.launch (Dispatchers.Main) { categoryDao.insert(category) }
+
+                        selectedNote?.categoryId = category.id
                         isCreatingCategory = false
                         isCreatingNote = true
                     },
@@ -211,7 +228,7 @@ fun NotesAppUI(
                 .fillMaxSize()
                 .background(Color.White)) {
                 ReminderSelectionScreen(
-                    reminders = reminders,
+                    reminders = reminderDao.getAllReminders(),
                     selectedReminderId = selectedNote?.reminderId,
                     onReminderSelected = { reminderId ->
                         // Handle reminder selection and update the reminderId in the note
@@ -219,10 +236,12 @@ fun NotesAppUI(
                         isCreatingNote = true // Return to the NoteCreationScreen
                     },
                     onReminderCreated = { reminderDateTime ->
-                        // Handle category creation and update the categoryId in the note
-                        // Here, you might want to add the new category to your database
-                        //val newCategoryId = createNewCategory(categoryName) // Implement this function
-                        // selectedNote?.categoryId = newCategoryId
+//                        val reminder = Reminder(dateTime = reminderDateTime, noteId = selectedNote.id)
+//                        //println(categoryName)
+//
+//                        GlobalScope.launch (Dispatchers.Main) { reminderDao.insert(reminder) }
+//
+//                        selectedNote?.reminderId = reminder.id
                         isCreatingReminder = false
                         isCreatingNote = true
                     },
@@ -238,16 +257,17 @@ fun NotesAppUI(
 
 @Composable
 fun NoteCreationScreen(
-    note: Note?, // nullable note parameter incase we are opening a note instead of creaating
+    note: Note?, // nullable note parameter in-case we are opening a note instead of creating
     onNoteCreated: (Note) -> Unit,
+    onNoteEdited: (Note) -> Unit,
     onCancel: () -> Unit,
     onCategoryCreate: () -> Unit,
     onReminderCreate: () -> Unit,
     onDelete: () -> Unit
 ) {
     // Define state variables for user input
-    var title by remember { mutableStateOf("") }
-    var content by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf(note?.title ?: "") }
+    var content by remember { mutableStateOf(note?.content ?: "") }
     var categoryId by remember { mutableStateOf<Long?>(null) }
     var reminderId by remember { mutableStateOf<Long?>(null) }
 
@@ -255,19 +275,18 @@ fun NoteCreationScreen(
         modifier = Modifier.fillMaxSize()
     ) {
         // Input fields for title, content, category, and reminder
-        TextField(
-            value = title,
-            onValueChange = { title = it },
-            label = { Text("Title") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        TextField(
-            value = content,
-            onValueChange = { content = it },
-            label = { Text("Content") },
-            modifier = Modifier.fillMaxWidth()
-        )
+            TextField(
+                value = title,
+                onValueChange = { title = it },
+                label = { Text("Title") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            TextField(
+                value = content,
+                onValueChange = { content = it },
+                label = { Text("Content") },
+                modifier = Modifier.fillMaxWidth()
+            )
 
         // Button to select or create a category
         Button(
@@ -277,12 +296,15 @@ fun NoteCreationScreen(
             Text("Select/Create Category")
         }
 
-        // Button to select or create a reminder
-        Button(
-            onClick = { onReminderCreate() },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Select/Create Reminder")
+        // Reminder button (show only if it's an existing note)
+        if (note != null) {
+            // Button to select or create a reminder
+            Button(
+                onClick = { onReminderCreate() },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Select/Create Reminder")
+            }
         }
 
         // Save, cancel, and delete buttons
@@ -294,17 +316,31 @@ fun NoteCreationScreen(
         ) {
             Button(
                 onClick = {
-                    val newNote = Note(
-                        id = note?.id ?: 0L, // Pass the id if it's an existing note
-                        title = title,
-                        content = content,
-                        categoryId = categoryId,
-                        reminderId = reminderId
-                    )
-                    onNoteCreated(newNote)
+                    if (note == null) {
+                        val newNote = Note(
+                            id = 0L,
+                            title = title,
+                            content = content,
+                            categoryId = categoryId,
+                            reminderId = reminderId
+                        )
+                        onNoteCreated(newNote)
+                    } else {
+                        note.title = title
+                        note.content = content
+                        note.categoryId = categoryId
+                        note.reminderId = reminderId
+                        onNoteEdited(note)
+                    }
+
                 },
             ) {
-                Text("Save")
+                if (note == null) {
+                    Text("Create")
+                } else {
+                    Text("Save")
+                }
+
             }
 
             // Cancel button
@@ -365,7 +401,7 @@ fun CategorySelectionScreen(
                 // Dropdown to select an existing category
                 DropdownMenu(
                     expanded = expanded,
-                    onDismissRequest = { isCreatingNewCategory = false }
+                    onDismissRequest = { expanded = false }
                 ) {
                     categoriesList.forEach { category ->
                         DropdownMenuItem(
@@ -476,7 +512,7 @@ fun ReminderSelectionScreen(
             // Dropdown to select an existing reminder
             DropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { isCreatingNewReminder = false }
+                onDismissRequest = { expanded = false }
             ) {
                 remindersList.forEach { reminder ->
                     DropdownMenuItem(

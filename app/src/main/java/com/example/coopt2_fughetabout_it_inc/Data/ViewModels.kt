@@ -10,18 +10,12 @@ import com.example.coopt2_fughetabout_it_inc.Data.ReminderDao
 import kotlinx.coroutines.launch
 
 class NotesViewModel(
-    private val noteDao: NoteDao,
-    private val categoryDao: CategoryDao,
-    private val reminderDao: ReminderDao
+    private val noteDao: NoteDao
 ) : ViewModel() {
 
     val allNotes: LiveData<List<Note>> = noteDao.getAllNotes()
-    val allCategories: LiveData<List<Category>> = categoryDao.getAllCategories()
-    val allReminders: LiveData<List<Reminder>> = reminderDao.getAllReminders()
     fun insertOrUpdate(
-        note: Note,
-        category: Category,
-        reminder: Reminder
+        note: Note
     ) {
         viewModelScope.launch {
             if (note.id == 0L) {
@@ -29,13 +23,33 @@ class NotesViewModel(
             } else {
                 noteDao.update(note)
             }
+        }
+    }
+}
+class CategoriesViewModel(
+    private val categoryDao: CategoryDao
+) : ViewModel() {
 
+    val allCategories: LiveData<List<Category>> = categoryDao.getAllCategories()
+
+     fun insertOrUpdate(category: Category) {
+        viewModelScope.launch {
             if (category.id == 0L) {
                 categoryDao.insert(category)
             } else {
                 categoryDao.update(category)
             }
+        }
+    }
+}
+class RemindersViewModel(
+    private val reminderDao: ReminderDao
+) : ViewModel() {
 
+    val allReminders: LiveData<List<Reminder>> = reminderDao.getAllReminders()
+
+    fun insertOrUpdate(reminder: Reminder) {
+        viewModelScope.launch {
             if (reminder.id == 0L) {
                 reminderDao.insert(reminder)
             } else {
@@ -44,3 +58,6 @@ class NotesViewModel(
         }
     }
 }
+
+
+

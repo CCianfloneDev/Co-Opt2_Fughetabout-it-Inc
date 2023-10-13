@@ -1,17 +1,15 @@
 package com.example.coopt2_fughetabout_it_inc
 
 
+import CategoriesViewModel
+import CategoriesViewModelFactory
 import NotesViewModel
 import NotesViewModelFactory
+import RemindersViewModel
+import RemindersViewModelFactory
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.Observer
-import com.example.coopt2_fughetabout_it_inc.Data.Note
 import com.example.coopt2_fughetabout_it_inc.composables.NotesAppUI
 import androidx.lifecycle.ViewModelProvider
 import com.example.coopt2_fughetabout_it_inc.Data.AppDatabase
@@ -25,6 +23,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var categoryDao: CategoryDao
     private lateinit var reminderDao: ReminderDao
     private lateinit var notesViewModel: NotesViewModel
+    private lateinit var categoriesViewModel: CategoriesViewModel
+    private lateinit var remindersViewModel: RemindersViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -34,11 +34,21 @@ class MainActivity : ComponentActivity() {
         categoryDao = appDatabase.categoryDao()
         reminderDao = appDatabase.reminderDao()
 
-        // Initialize the ViewModel
         notesViewModel = ViewModelProvider(
             this,
-            NotesViewModelFactory(noteDao, categoryDao, reminderDao)
+            NotesViewModelFactory(noteDao)
         ).get(NotesViewModel::class.java)
+
+        categoriesViewModel = ViewModelProvider(
+            this,
+            CategoriesViewModelFactory(categoryDao)
+        ).get(CategoriesViewModel::class.java)
+
+        remindersViewModel = ViewModelProvider(
+            this,
+            RemindersViewModelFactory(reminderDao)
+        ).get(RemindersViewModel::class.java)
+
         val allNotes = noteDao.getAllNotes()
         val allCategories = categoryDao.getAllCategories()
         val allReminders = reminderDao.getAllReminders()
@@ -54,9 +64,9 @@ class MainActivity : ComponentActivity() {
         // Set the content view with NotesAppUI
         setContent {
             NotesAppUI(
-                notes = allNotes,
-                categories = allCategories,
-                reminders = allReminders
+                noteDao = noteDao,
+                categoryDao = categoryDao,
+                reminderDao = reminderDao,
             )
         }
     }
