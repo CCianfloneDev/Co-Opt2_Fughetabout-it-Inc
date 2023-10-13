@@ -153,9 +153,10 @@ fun NotesAppUI(
                         NoteCreationScreen(
                             note = selectedNote,
                             onNoteCreated = { newNote ->
-                                // Handle note creation and save to the database
-                                // You can call a ViewModel function here to save the note
-                                // After saving, set isCreatingNote back to false
+                                val note = Note(title = newNote.title, content = newNote.content,
+                                    categoryId = newNote.categoryId, reminderId = newNote.reminderId)
+
+                                GlobalScope.launch (Dispatchers.Main) { noteDao.insert(note) }
                                 selectedNote = null
                                 isCreatingNote = false
                             },
@@ -198,12 +199,11 @@ fun NotesAppUI(
                     },
                     onCategoryCreated = { categoryName ->
                         val category = Category(name = categoryName)
-                        println(categoryName)
+                        //println(categoryName)
 
                         GlobalScope.launch (Dispatchers.Main) { categoryDao.insert(category) }
-                        // Call your DAO function to insert the category into the database
 
-                        // selectedNote?.categoryId = newCategoryId
+                        selectedNote?.categoryId = category.id
                         isCreatingCategory = false
                         isCreatingNote = true
                     },
@@ -228,10 +228,12 @@ fun NotesAppUI(
                         isCreatingNote = true // Return to the NoteCreationScreen
                     },
                     onReminderCreated = { reminderDateTime ->
-                        // Handle category creation and update the categoryId in the note
-                        // Here, you might want to add the new category to your database
-                        //val newCategoryId = createNewCategory(categoryName) // Implement this function
-                        // selectedNote?.categoryId = newCategoryId
+//                        val reminder = Reminder(dateTime = reminderDateTime, noteId = selectedNote.id)
+//                        //println(categoryName)
+//
+//                        GlobalScope.launch (Dispatchers.Main) { reminderDao.insert(reminder) }
+//
+//                        selectedNote?.reminderId = reminder.id
                         isCreatingReminder = false
                         isCreatingNote = true
                     },
@@ -286,12 +288,15 @@ fun NoteCreationScreen(
             Text("Select/Create Category")
         }
 
-        // Button to select or create a reminder
-        Button(
-            onClick = { onReminderCreate() },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Select/Create Reminder")
+        // Reminder button (show only if it's an existing note)
+        if (note != null) {
+            // Button to select or create a reminder
+            Button(
+                onClick = { onReminderCreate() },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Select/Create Reminder")
+            }
         }
 
         // Save, cancel, and delete buttons
@@ -485,7 +490,7 @@ fun ReminderSelectionScreen(
             // Dropdown to select an existing reminder
             DropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { isCreatingNewReminder = false }
+                onDismissRequest = { expanded = false }
             ) {
                 remindersList.forEach { reminder ->
                     DropdownMenuItem(
