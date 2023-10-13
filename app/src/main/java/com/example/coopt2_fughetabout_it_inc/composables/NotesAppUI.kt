@@ -62,7 +62,7 @@ fun <T> LiveData<T>.observeAsState(initial: T): T {
 @Composable
 fun NoteItem(
     note: Note,
-    onItemClick: () -> Unit
+    onItemClick: (Note) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -74,10 +74,10 @@ fun NoteItem(
         Column(
             modifier = Modifier
                 .padding(16.dp)
-                .clickable(onClick = onItemClick)
+                .clickable(onClick = { onItemClick(note) })
         ) {
             Text(
-                text = note.content,
+                text = note.title,
                 style = MaterialTheme.typography.body1,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -117,7 +117,6 @@ fun NotesAppUI(
                     modifier = Modifier.weight(1f)
                 ) {
                     items(notesList) { note ->
-                        // Click on a note to open NoteCreationScreen
                         NoteItem(note = note)
                         {
                             selectedNote = note
@@ -157,6 +156,12 @@ fun NotesAppUI(
                                     categoryId = newNote.categoryId, reminderId = newNote.reminderId)
 
                                 GlobalScope.launch (Dispatchers.Main) { noteDao.insert(note) }
+                                selectedNote = null
+                                isCreatingNote = false
+                            },
+                            onNoteEdited = { editNote ->
+                                GlobalScope.launch (Dispatchers.Main) { noteDao.update(editNote) }
+
                                 selectedNote = null
                                 isCreatingNote = false
                             },
@@ -249,8 +254,9 @@ fun NotesAppUI(
 
 @Composable
 fun NoteCreationScreen(
-    note: Note?, // nullable note parameter incase we are opening a note instead of creaating
+    note: Note?, // nullable note parameter in-case we are opening a note instead of creating
     onNoteCreated: (Note) -> Unit,
+    onNoteEdited: (Note) -> Unit,
     onCancel: () -> Unit,
     onCategoryCreate: () -> Unit,
     onReminderCreate: () -> Unit,
@@ -261,6 +267,11 @@ fun NoteCreationScreen(
     var content by remember { mutableStateOf("") }
     var categoryId by remember { mutableStateOf<Long?>(null) }
     var reminderId by remember { mutableStateOf<Long?>(null) }
+
+    if (note != null) {
+        title = note.title
+        content = note.content
+    }
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -308,17 +319,27 @@ fun NoteCreationScreen(
         ) {
             Button(
                 onClick = {
-                    val newNote = Note(
-                        id = note?.id ?: 0L, // Pass the id if it's an existing note
-                        title = title,
-                        content = content,
-                        categoryId = categoryId,
-                        reminderId = reminderId
-                    )
-                    onNoteCreated(newNote)
+                    if (note == null) {
+                        val newNote = Note(
+                            id = 0L,
+                            title = title,
+                            content = content,
+                            categoryId = categoryId,
+                            reminderId = reminderId
+                        )
+                        onNoteCreated(newNote)
+                    } else {
+                        onNoteEdited(note)
+                    }
+
                 },
             ) {
-                Text("Save")
+                if (note == null) {
+                    Text("Create")
+                } else {
+                    Text("Save")
+                }
+
             }
 
             // Cancel button
