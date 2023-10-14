@@ -110,6 +110,10 @@ fun NotesAppUI(
     var isCreatingReminder by remember { mutableStateOf(false) }
     var selectedNote: Note? by remember { mutableStateOf(null) }
 
+    // this will be set if we're creating a new category
+    var currentCategoryId: Long?
+    currentCategoryId = 0
+
     Box(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -221,8 +225,11 @@ fun NotesAppUI(
                     onCategorySelected = { categoryId ->
                         // Handle category selection and update the categoryId in the note
                         selectedNote?.categoryId = categoryId
+                        currentCategoryId = categoryId
 
-                        GlobalScope.launch(Dispatchers.Main) { noteDao.update(selectedNote) }
+                        if (selectedNote != null) {
+                            GlobalScope.launch(Dispatchers.Main) { noteDao.update(selectedNote) }
+                        }
                         isCreatingNote = true
                         isCreatingCategory = false
                     },
@@ -293,6 +300,7 @@ fun NoteCreationScreen(
     var categoryId by remember { mutableStateOf(note?.categoryId ?: null) }
     var categoryText by remember { mutableStateOf("") }
     var reminderId by remember { mutableStateOf<Long?>(null) }
+    //var currentNote by remember { mutableStateOf<Note?>(null) }
 
     if (categoryId != null) {
         val category = categoryDao.getCategoryById(categoryId).collectAsState(initial = "")
@@ -322,7 +330,6 @@ fun NoteCreationScreen(
             modifier = Modifier.fillMaxWidth(),
             enabled = false, // Disable user input
         )
-
 
         // Button to select or create a category
         Button(
