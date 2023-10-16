@@ -12,10 +12,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.example.coopt2_fughetabout_it_inc.composables.NotesAppUI
 import androidx.lifecycle.ViewModelProvider
-import com.example.coopt2_fughetabout_it_inc.Data.AppDatabase
-import com.example.coopt2_fughetabout_it_inc.Data.CategoryDao
-import com.example.coopt2_fughetabout_it_inc.Data.NoteDao
-import com.example.coopt2_fughetabout_it_inc.Data.ReminderDao
+import com.example.coopt2_fughetabout_it_inc.data.AppDatabase
+import com.example.coopt2_fughetabout_it_inc.data.CategoryDao
+import com.example.coopt2_fughetabout_it_inc.data.NoteDao
+import com.example.coopt2_fughetabout_it_inc.data.ReminderDao
 
 
 class MainActivity : ComponentActivity() {

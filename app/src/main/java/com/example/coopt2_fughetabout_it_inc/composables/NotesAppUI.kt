@@ -1,6 +1,5 @@
 package com.example.coopt2_fughetabout_it_inc.composables
 
-import android.widget.EditText
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,11 +9,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.DropdownMenu
@@ -29,26 +26,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Popup
 import androidx.lifecycle.LiveData
-import com.example.coopt2_fughetabout_it_inc.Data.Note
-import com.example.coopt2_fughetabout_it_inc.Data.Category
-import com.example.coopt2_fughetabout_it_inc.Data.CategoryDao
-import com.example.coopt2_fughetabout_it_inc.Data.NoteDao
-import com.example.coopt2_fughetabout_it_inc.Data.Reminder
-import com.example.coopt2_fughetabout_it_inc.Data.ReminderDao
-import androidx.lifecycle.lifecycleScope
+import com.example.coopt2_fughetabout_it_inc.data.Note
+import com.example.coopt2_fughetabout_it_inc.data.Category
+import com.example.coopt2_fughetabout_it_inc.data.CategoryDao
+import com.example.coopt2_fughetabout_it_inc.data.NoteDao
+import com.example.coopt2_fughetabout_it_inc.data.Reminder
+import com.example.coopt2_fughetabout_it_inc.data.ReminderDao
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.time.format.TextStyle
 
 @Composable
 fun <T> LiveData<T>.observeAsState(initial: T): T {
@@ -679,4 +670,3 @@ fun ReminderSelectionScreen(
         }
     }
 }
-

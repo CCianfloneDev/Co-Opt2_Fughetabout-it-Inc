@@ -1,11 +1,9 @@
-package com.example.coopt2_fughetabout_it_inc.Data
+package com.example.coopt2_fughetabout_it_inc.data
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(entities = [Note::class, Category::class, Reminder::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
