@@ -29,6 +29,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,7 +45,11 @@ import com.example.coopt2_fughetabout_it_inc.data.ReminderDao
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 ///Converts the notes into an observable type.
 @Composable
@@ -279,7 +284,11 @@ fun NotesAppUI(
         }
     }
 }
+fun getCategoriesFromDao(categoryDao: CategoryDao): LiveData<List<Category>> {
 
+      return  categoryDao.getAllCategories()
+
+}
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun NoteCreationScreen(
@@ -293,17 +302,12 @@ fun NoteCreationScreen(
     categoryDao: CategoryDao
 ) {
     // Define state variables for user input
+    val categoriesList = getCategoriesFromDao(categoryDao).observeAsState(emptyList())
+
     var title by remember { mutableStateOf(note?.title ?: "") }
     var content by remember { mutableStateOf(note?.content ?: "") }
     var categoryId by remember { mutableStateOf(note?.categoryId) }
-    var categoryText by remember { mutableStateOf("") }
     var reminderId by remember { mutableStateOf<Long?>(null) }
-    //var currentNote by remember { mutableStateOf<Note?>(null) }
-
-    if (categoryId != null) {
-        val category = categoryDao.getCategoryById(categoryId).collectAsState(initial = "")
-        categoryText = category.value ?: ""
-    }
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -323,43 +327,55 @@ fun NoteCreationScreen(
         )
 
 
-        var expanded by remember { mutableStateOf(false) }
+        var expandedCatDropdown by remember { mutableStateOf(false) }
 
-        val categories = categoryDao.getAllCategories()
-        val categoriesList = categories.observeAsState(emptyList())
-        var selectedCategoryName by remember { mutableStateOf<String?>(null) }
-        var selectedCategoryId by remember { mutableStateOf<Long?>(null) }
+        //This is bad lol but whatever
+        //Set it to a empty string so we can have a non eye catching label
+        //Wait for the for each below to update the categoriesList state
+        //When we have a state we grab the first value
+        var selectedCategoryName by remember { mutableStateOf<String>("") }
+        /*var selectedCategoryId by remember { mutableStateOf<Long?>(null) }*/
+
+        //Make sure the list has its state update and then apply default name
+        if(categoriesList.isNotEmpty() && categoryId == null){
+            selectedCategoryName = categoriesList[0].name
+        }else if(categoryId != null && categoriesList.isNotEmpty() ){
+            //If selectedCatId is not null we know the user selected something so we can set the name to it
+
+            //Idk why its a long but yeah convert it, make sure its not null and -1 to keep index in line
+            selectedCategoryName = categoriesList[categoryId!!.toInt()-1].name
+        }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(32.dp)
         ) {
             ExposedDropdownMenuBox(
-                expanded = expanded,
+                expanded = expandedCatDropdown,
                 onExpandedChange = {
-                    expanded = !expanded
+                    expandedCatDropdown = !expandedCatDropdown
                 }
             ) {
+
                 TextField(
-                    value =  "select" ,
+                    value =  selectedCategoryName,
                     onValueChange = {},
                     readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCatDropdown) },
                     modifier = Modifier.fillMaxWidth()
                 )
 
 
                 DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
+                    expanded = expandedCatDropdown,
+                    onDismissRequest = { expandedCatDropdown = false }
                 ) {
                     categoriesList.forEach { category ->
                         DropdownMenuItem(
                             onClick = {
                                 selectedCategoryName = category.name
-                                selectedCategoryId = category.id
-
-                                expanded = false
+                                categoryId = category.id
+                                expandedCatDropdown = false
                             }
                         ) {
                             Text(text = category.name)
@@ -370,12 +386,12 @@ fun NoteCreationScreen(
         }
 
         // Button to select or create a category
-        Button(
+        /*Button(
             onClick = { onCategoryCreate() },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Select/Create Category")
-        }
+        }*/
 
         // Reminder button (show only if it's an existing note)
         if (note != null) {
