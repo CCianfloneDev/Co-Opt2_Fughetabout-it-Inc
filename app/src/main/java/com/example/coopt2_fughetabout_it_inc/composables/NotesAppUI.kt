@@ -24,6 +24,8 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,6 +43,7 @@ import com.example.coopt2_fughetabout_it_inc.data.ReminderDao
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 
@@ -107,7 +110,6 @@ fun NotesAppUI(
 
     // this will be set if we're creating a new category
 
-
     Box(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -138,12 +140,27 @@ fun NotesAppUI(
                     onClick = {
                         selectedNote = null // Clear the selected note
                         isCreatingNote = true
+                        isCreatingCategory = false
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
                     Text(text = "Add New Note")
+                }
+
+                // Button to add a new note
+                Button(
+                    onClick = {
+                        selectedNote = null // Clear the selected note
+                        isCreatingNote = false
+                        isCreatingCategory = true
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(text = "Add/delete Categories")
                 }
             }
         }
@@ -171,6 +188,7 @@ fun NotesAppUI(
                             NoteCreationScreen(
                                 note = selectedNote,
                                 onNoteCreated = { newNote ->
+
                                     val note = Note(
                                         title = newNote.title,
                                         content = newNote.content,
@@ -203,7 +221,8 @@ fun NotesAppUI(
                                     selectedNote = null
                                     isCreatingNote = false
                                 },
-                                categoryDao = categoryDao
+                                categories = categoryDao.getAllCategories(),
+                                reminderName = reminderDao.getReminderById(selectedNote?.reminderId).collectAsState(initial = "")
                             )
                         }
                     }
@@ -218,31 +237,18 @@ fun NotesAppUI(
             ) {
                 CategorySelectionScreen(
                     categories = categoryDao.getAllCategories(),
-                    existingCategoryId = selectedNote?.categoryId,
-                    onCategorySelected = { categoryId ->
-                        // Handle category selection and update the categoryId in the note
-                        selectedNote?.categoryId = categoryId
-
-
-                        if (selectedNote != null) {
-                            GlobalScope.launch(Dispatchers.Main) { noteDao.update(selectedNote) }
-                        }
-                        isCreatingNote = true
-                        isCreatingCategory = false
-                    },
                     onCategoryCreated = { categoryName ->
                         val category = Category(name = categoryName)
-                        //println(categoryName)
-
                         GlobalScope.launch(Dispatchers.Main) { categoryDao.insert(category) }
-
-                        selectedNote?.categoryId = category.id
-                        //isCreatingCategory = false
-                        isCreatingNote = true
+                    },
+                    onCategoryDeleted = { categoryId ->
+                        if (categoryId != null) {
+                            GlobalScope.launch(Dispatchers.IO) { categoryDao.delete(categoryId) }
+                        }
                     },
                     onCancel = {
                         isCreatingCategory = false
-                        isCreatingNote = true
+                        isCreatingNote = false
                     }
                 )
             }
@@ -282,12 +288,6 @@ fun NotesAppUI(
     }
 }
 
-fun getCategoriesFromDao(categoryDao: CategoryDao): LiveData<List<Category>> {
-
-    return categoryDao.getAllCategories()
-
-}
-
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun NoteCreationScreen(
@@ -297,15 +297,19 @@ fun NoteCreationScreen(
     onCancel: () -> Unit,
     onReminderCreate: () -> Unit,
     onDelete: () -> Unit,
-    categoryDao: CategoryDao
+    categories: LiveData<List<Category>>,
+    reminderName: State<String?>
 ) {
     // Define state variables for user input
-    val categoriesList = getCategoriesFromDao(categoryDao).observeAsState(emptyList())
+    val categoriesList = categories.observeAsState(emptyList())
 
     var title by remember { mutableStateOf(note?.title ?: "") }
     var content by remember { mutableStateOf(note?.content ?: "") }
-    var categoryId by remember { mutableStateOf(note?.categoryId) }
+    var categoryId by remember { mutableStateOf<Long?>(null) }
     var reminderId by remember { mutableStateOf<Long?>(null) }
+    var reminder by remember { mutableStateOf("")}
+
+    reminder = reminderName.value ?: ""
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -323,6 +327,12 @@ fun NoteCreationScreen(
             label = { Text("Content") },
             modifier = Modifier.fillMaxWidth()
         )
+        TextField(
+            value = reminder,
+            onValueChange = { reminder = it },
+            label = { Text("Reminder date/time") },
+            modifier = Modifier.fillMaxWidth()
+        )
 
 
         var expandedCatDropdown by remember { mutableStateOf(false) }
@@ -333,14 +343,14 @@ fun NoteCreationScreen(
         //When we have a state we grab the first value
         var selectedCategoryName by remember { mutableStateOf("") }
 
-        //Make sure the list has its state update and then apply default name
-        if (categoriesList.isNotEmpty() && categoryId == null) {
-            selectedCategoryName = categoriesList[0].name
-        } else if (categoryId != null && categoriesList.isNotEmpty()) {
-            //If selectedCatId is not null we know the user selected something so we can set the name to it
-
-            //Idk why its a long but yeah convert it, make sure its not null and -1 to keep index in line
-            selectedCategoryName = categoriesList[categoryId!!.toInt() - 1].name
+        // If an existing category ID is provided, find and set the initial state
+        if (note?.categoryId != null) {
+            val existingCategory = categoriesList.find { it.id == note?.categoryId }
+            if (existingCategory != null) {
+                selectedCategoryName = existingCategory.name
+                //categoryId = note?.categoryId
+                println("category exists")
+            }
         }
         Box(
             modifier = Modifier
@@ -371,6 +381,7 @@ fun NoteCreationScreen(
                         DropdownMenuItem(
                             onClick = {
                                 selectedCategoryName = category.name
+                                note?.categoryId = category.id
                                 categoryId = category.id
                                 expandedCatDropdown = false
                             }
@@ -381,14 +392,6 @@ fun NoteCreationScreen(
                 }
             }
         }
-
-        // Button to select or create a category
-        /*Button(
-            onClick = { onCategoryCreate() },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Select/Create Category")
-        }*/
 
         // Reminder button (show only if it's an existing note)
         if (note != null) {
@@ -422,7 +425,7 @@ fun NoteCreationScreen(
                     } else {
                         note.title = title
                         note.content = content
-                        note.categoryId = categoryId
+                        //note.categoryId = categoryId
                         note.reminderId = reminderId
                         onNoteEdited(note)
                     }
@@ -456,30 +459,22 @@ fun NoteCreationScreen(
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun CategorySelectionScreen(
     categories: LiveData<List<Category>>,
-    existingCategoryId: Long?,
-    onCategorySelected: (Long?) -> Unit,
     onCategoryCreated: (String) -> Unit,
+    onCategoryDeleted: (Long?) -> Unit,
     onCancel: () -> Unit
 ) {
     val categoriesList = categories.observeAsState(emptyList())
     var newCategoryName by remember { mutableStateOf("") }
     var isCreatingNewCategory by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
-    var selectedCategoryName by remember { mutableStateOf<String?>(null) }
+    var selectedCategoryName by remember { mutableStateOf<String>("") }
     var selectedCategoryId by remember { mutableStateOf<Long?>(null) }
 
-    // If an existing category ID is provided, find and set the initial state
-    if (existingCategoryId != null) {
-        val existingCategory = categoriesList.find { it.id == existingCategoryId }
-        if (existingCategory != null) {
-            selectedCategoryName = existingCategory.name
-            selectedCategoryId = existingCategoryId
-            println("category exists")
-        }
-    }
+    var expandedCatDropdown by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -497,48 +492,90 @@ fun CategorySelectionScreen(
             ) {
 
                 Text(
-                    text = "Select/Create Category",
+                    text = "Select Category",
                     style = MaterialTheme.typography.h5,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
                 Box(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp)
                 ) {
-                    Text(
-                        "Pick a category", modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(onClick = { expanded = true })
-                            .background(Color.LightGray)
-                    )
-
-                    // Dropdown to select an existing category
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
+                    ExposedDropdownMenuBox(
+                        expanded = expandedCatDropdown,
+                        onExpandedChange = {
+                            expandedCatDropdown = !expandedCatDropdown
+                        }
                     ) {
-                        categoriesList.forEach { category ->
-                            DropdownMenuItem(
-                                onClick = {
-                                    selectedCategoryName = category.name
-                                    selectedCategoryId = category.id
-                                    isCreatingNewCategory = false
-                                    expanded = false
+
+                        TextField(
+                            value = selectedCategoryName,
+                            onValueChange = {},
+                            readOnly = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCatDropdown) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+
+                        DropdownMenu(
+                            expanded = expandedCatDropdown,
+                            onDismissRequest = { expandedCatDropdown = false }
+                        ) {
+                            categoriesList.forEach { category ->
+                                DropdownMenuItem(
+                                    onClick = {
+                                        selectedCategoryName = category.name
+                                        selectedCategoryId = category.id
+                                        expandedCatDropdown = false
+                                        isCreatingNewCategory = false
+                                    }
+                                ) {
+                                    Text(text = category.name)
                                 }
-                            ) {
-                                Text(text = category.name)
                             }
                         }
                     }
-
                 }
+
+//                Box(
+//                    modifier = Modifier.fillMaxWidth()
+//                ) {
+//                    Text(
+//                        "Pick a category to delete", modifier = Modifier
+//                            .fillMaxWidth()
+//                            .clickable(onClick = { expanded = true })
+//                            .background(Color.LightGray)
+//                    )
+//
+//
+//                    // Dropdown to select an existing category
+//                    DropdownMenu(
+//                        expanded = expanded,
+//                        onDismissRequest = { expanded = false }
+//                    ) {
+//                        categoriesList.forEach { category ->
+//                            DropdownMenuItem(
+//                                onClick = {
+//                                    selectedCategoryName = category.name
+//                                    selectedCategoryId = category.id
+//                                    isCreatingNewCategory = false
+//                                    expanded = false
+//                                }
+//                            ) {
+//                                Text(text = category.name)
+//                            }
+//                        }
+//                    }
+//
+//                }
 
                 // Button to show text field for creating a new category
                 Button(
                     onClick = { isCreatingNewCategory = true },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Add New Category")
+                    Text("Create new Category")
                 }
 
                 if (isCreatingNewCategory) {
@@ -561,7 +598,6 @@ fun CategorySelectionScreen(
                             onClick = {
                                 if (newCategoryName.isNotBlank()) {
                                     onCategoryCreated(newCategoryName)
-                                    //isCreatingNewCategory = false
                                     newCategoryName = ""
                                 }
                             }
@@ -585,35 +621,34 @@ fun CategorySelectionScreen(
 
                     Button(
                         onClick = {
-                            selectedCategoryName = null // Clear the selected category
+                            selectedCategoryName = ""
+                            onCategoryDeleted(selectedCategoryId)
                         },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 16.dp)
                     ) {
-                        Text("Clear")
+                        Text("Delete")
                     }
 
                 }
 
-                // Apply button to return to the NoteCreationScreen
-                Button(
-                    onClick = { onCategorySelected(selectedCategoryId) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp)
-                ) {
-                    Text("Apply")
-                }
+//                Button(
+//                    onClick = { onCategorySelected(selectedCategoryId) },
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(top = 16.dp)
+//                ) {
+//                    Text("Apply")
+//                }
 
-                // Cancel button to return to the NoteCreationScreen
                 Button(
                     onClick = onCancel,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 16.dp)
                 ) {
-                    Text("Cancel and Return to Note Creation")
+                    Text("Cancel")
                 }
             }
         }

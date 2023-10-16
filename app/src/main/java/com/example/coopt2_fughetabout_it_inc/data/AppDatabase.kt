@@ -30,7 +30,7 @@ abstract class AppDatabase : RoomDatabase() {
             // Create and return the database instance
             return Room.databaseBuilder(
                 context.applicationContext,
-                AppDatabase::class.java, "app_database2"
+                AppDatabase::class.java, "app_database3"
             ).build()
         }
     }
