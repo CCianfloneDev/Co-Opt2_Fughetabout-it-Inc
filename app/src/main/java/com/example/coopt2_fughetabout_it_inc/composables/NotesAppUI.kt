@@ -41,6 +41,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
+///Converts the notes into an observable type.
 @Composable
 fun <T> LiveData<T>.observeAsState(initial: T): T {
     val liveData = this
