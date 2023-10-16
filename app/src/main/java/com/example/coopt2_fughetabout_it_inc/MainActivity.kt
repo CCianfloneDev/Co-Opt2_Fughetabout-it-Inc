@@ -1,21 +1,21 @@
 package com.example.coopt2_fughetabout_it_inc
 
 
-import CategoriesViewModel
+import com.example.coopt2_fughetabout_it_inc.data.CategoriesViewModel
 import CategoriesViewModelFactory
-import NotesViewModel
+import com.example.coopt2_fughetabout_it_inc.data.NotesViewModel
 import NotesViewModelFactory
-import RemindersViewModel
+import com.example.coopt2_fughetabout_it_inc.data.RemindersViewModel
 import RemindersViewModelFactory
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.example.coopt2_fughetabout_it_inc.composables.NotesAppUI
 import androidx.lifecycle.ViewModelProvider
-import com.example.coopt2_fughetabout_it_inc.Data.AppDatabase
-import com.example.coopt2_fughetabout_it_inc.Data.CategoryDao
-import com.example.coopt2_fughetabout_it_inc.Data.NoteDao
-import com.example.coopt2_fughetabout_it_inc.Data.ReminderDao
+import com.example.coopt2_fughetabout_it_inc.data.AppDatabase
+import com.example.coopt2_fughetabout_it_inc.data.CategoryDao
+import com.example.coopt2_fughetabout_it_inc.data.NoteDao
+import com.example.coopt2_fughetabout_it_inc.data.ReminderDao
 
 
 class MainActivity : ComponentActivity() {
@@ -25,6 +25,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var notesViewModel: NotesViewModel
     private lateinit var categoriesViewModel: CategoriesViewModel
     private lateinit var remindersViewModel: RemindersViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -37,21 +38,21 @@ class MainActivity : ComponentActivity() {
         notesViewModel = ViewModelProvider(
             this,
             NotesViewModelFactory(noteDao)
-        ).get(NotesViewModel::class.java)
+        )[NotesViewModel::class.java]
 
         categoriesViewModel = ViewModelProvider(
             this,
             CategoriesViewModelFactory(categoryDao)
-        ).get(CategoriesViewModel::class.java)
+        )[CategoriesViewModel::class.java]
 
         remindersViewModel = ViewModelProvider(
             this,
             RemindersViewModelFactory(reminderDao)
-        ).get(RemindersViewModel::class.java)
+        )[RemindersViewModel::class.java]
 
-        val allNotes = noteDao.getAllNotes()
-        val allCategories = categoryDao.getAllCategories()
-        val allReminders = reminderDao.getAllReminders()
+//        val allNotes = noteDao.getAllNotes()
+//        val allCategories = categoryDao.getAllCategories()
+//        val allReminders = reminderDao.getAllReminders()
 
 //        allNotes.observe(this, Observer { notes ->
 //            for (note in notes) {
@@ -71,30 +72,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-//    // Define a function to fetch the list of notes
-//    private fun getNotes(): List<Note> {
-//        // Implement your logic to retrieve the notes from your data source
-//        return listOf(
-//            Note(1, "Note 1", "content", null, null),
-//            Note(2, "Note 2", "content", null, null),
-//            // Add more notes as needed
-//        )
-//    }
 }
-
-
-//@Composable
-//fun NoteCard(msg: Note) {
-//    Column {
-//        Text(text = msg.title)
-//        Text(text = msg.content)
-//    }
-//}
-//
-//@Preview
-//@Composable
-//fun PreviewNoteCard() {
-//    NoteCard(
-//        msg = Note(title = "Lexi", content = "Compose",categoryId = null, reminderId =  null)
-//    )
-//}

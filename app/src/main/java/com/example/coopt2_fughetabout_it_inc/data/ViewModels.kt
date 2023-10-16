@@ -1,12 +1,8 @@
+package com.example.coopt2_fughetabout_it_inc.data
+
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.coopt2_fughetabout_it_inc.Data.Category
-import com.example.coopt2_fughetabout_it_inc.Data.CategoryDao
-import com.example.coopt2_fughetabout_it_inc.Data.Note
-import com.example.coopt2_fughetabout_it_inc.Data.NoteDao
-import com.example.coopt2_fughetabout_it_inc.Data.Reminder
-import com.example.coopt2_fughetabout_it_inc.Data.ReminderDao
 import kotlinx.coroutines.launch
 
 class NotesViewModel(
@@ -58,6 +54,3 @@ class RemindersViewModel(
         }
     }
 }
-
-
-

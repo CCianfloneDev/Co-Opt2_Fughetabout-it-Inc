@@ -1,4 +1,4 @@
-package com.example.coopt2_fughetabout_it_inc.Data
+package com.example.coopt2_fughetabout_it_inc.data
 
 import androidx.lifecycle.LiveData
 import androidx.room.*
@@ -12,7 +12,7 @@ interface NoteDao {
     suspend fun insert(note: Note)
 
     @Update
-    suspend fun update(note: Note)
+    suspend fun update(note: Note?)
 
     @Delete
     suspend fun delete(note: Note)
