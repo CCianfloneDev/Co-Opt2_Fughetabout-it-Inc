@@ -1,5 +1,6 @@
 package com.example.coopt2_fughetabout_it_inc.composables
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +17,9 @@ import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ExposedDropdownMenuBox
+import androidx.compose.material.ExposedDropdownMenuDefaults
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
@@ -28,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
 import com.example.coopt2_fughetabout_it_inc.data.Note
@@ -275,6 +280,7 @@ fun NotesAppUI(
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun NoteCreationScreen(
     note: Note?, // nullable note parameter in-case we are opening a note instead of creating
@@ -289,7 +295,7 @@ fun NoteCreationScreen(
     // Define state variables for user input
     var title by remember { mutableStateOf(note?.title ?: "") }
     var content by remember { mutableStateOf(note?.content ?: "") }
-    var categoryId by remember { mutableStateOf(note?.categoryId ?: null) }
+    var categoryId by remember { mutableStateOf(note?.categoryId) }
     var categoryText by remember { mutableStateOf("") }
     var reminderId by remember { mutableStateOf<Long?>(null) }
     //var currentNote by remember { mutableStateOf<Note?>(null) }
@@ -315,13 +321,53 @@ fun NoteCreationScreen(
             label = { Text("Content") },
             modifier = Modifier.fillMaxWidth()
         )
-        TextField(
-            value = categoryText,
-            onValueChange = { categoryText = it },
-            label = { Text("Category") },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = false, // Disable user input
-        )
+
+
+        var expanded by remember { mutableStateOf(false) }
+
+        val categories = categoryDao.getAllCategories()
+        val categoriesList = categories.observeAsState(emptyList())
+        var selectedCategoryName by remember { mutableStateOf<String?>(null) }
+        var selectedCategoryId by remember { mutableStateOf<Long?>(null) }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(32.dp)
+        ) {
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = {
+                    expanded = !expanded
+                }
+            ) {
+                TextField(
+                    value =  "select" ,
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    categoriesList.forEach { category ->
+                        DropdownMenuItem(
+                            onClick = {
+                                selectedCategoryName = category.name
+                                selectedCategoryId = category.id
+
+                                expanded = false
+                            }
+                        ) {
+                            Text(text = category.name)
+                        }
+                    }
+                }
+            }
+        }
 
         // Button to select or create a category
         Button(
@@ -528,7 +574,7 @@ fun CategorySelectionScreen(
                                 onClick = {
                                     selectedCategoryName = null // Clear the selected category
                                 },
-                                modifier =  Modifier
+                                modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(top = 16.dp)
                             ) {
