@@ -38,19 +38,3 @@ class CategoriesViewModel(
         }
     }
 }
-class RemindersViewModel(
-    private val reminderDao: ReminderDao
-) : ViewModel() {
-
-    val allReminders: LiveData<List<Reminder>> = reminderDao.getAllReminders()
-
-    fun insertOrUpdate(reminder: Reminder) {
-        viewModelScope.launch {
-            if (reminder.id == 0L) {
-                reminderDao.insert(reminder)
-            } else {
-                reminderDao.update(reminder)
-            }
-        }
-    }
-}

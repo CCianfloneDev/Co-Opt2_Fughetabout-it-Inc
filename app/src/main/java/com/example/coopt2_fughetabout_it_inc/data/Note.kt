@@ -10,5 +10,4 @@ data class Note(
     var title: String,
     var content: String,
     var categoryId: Long?,
-    var reminderId: Long?
 )

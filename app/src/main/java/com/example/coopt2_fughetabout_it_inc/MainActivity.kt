@@ -5,8 +5,6 @@ import com.example.coopt2_fughetabout_it_inc.data.CategoriesViewModel
 import CategoriesViewModelFactory
 import com.example.coopt2_fughetabout_it_inc.data.NotesViewModel
 import NotesViewModelFactory
-import com.example.coopt2_fughetabout_it_inc.data.RemindersViewModel
-import RemindersViewModelFactory
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -15,16 +13,13 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.coopt2_fughetabout_it_inc.data.AppDatabase
 import com.example.coopt2_fughetabout_it_inc.data.CategoryDao
 import com.example.coopt2_fughetabout_it_inc.data.NoteDao
-import com.example.coopt2_fughetabout_it_inc.data.ReminderDao
 
 
 class MainActivity : ComponentActivity() {
     private lateinit var noteDao: NoteDao
     private lateinit var categoryDao: CategoryDao
-    private lateinit var reminderDao: ReminderDao
     private lateinit var notesViewModel: NotesViewModel
     private lateinit var categoriesViewModel: CategoriesViewModel
-    private lateinit var remindersViewModel: RemindersViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,7 +28,6 @@ class MainActivity : ComponentActivity() {
         val appDatabase = AppDatabase.getDatabase(applicationContext)
         noteDao = appDatabase.noteDao()
         categoryDao = appDatabase.categoryDao()
-        reminderDao = appDatabase.reminderDao()
 
         notesViewModel = ViewModelProvider(
             this,
@@ -44,11 +38,6 @@ class MainActivity : ComponentActivity() {
             this,
             CategoriesViewModelFactory(categoryDao)
         )[CategoriesViewModel::class.java]
-
-        remindersViewModel = ViewModelProvider(
-            this,
-            RemindersViewModelFactory(reminderDao)
-        )[RemindersViewModel::class.java]
 
 //        val allNotes = noteDao.getAllNotes()
 //        val allCategories = categoryDao.getAllCategories()
@@ -67,7 +56,6 @@ class MainActivity : ComponentActivity() {
             NotesAppUI(
                 noteDao = noteDao,
                 categoryDao = categoryDao,
-                reminderDao = reminderDao,
             )
         }
     }
