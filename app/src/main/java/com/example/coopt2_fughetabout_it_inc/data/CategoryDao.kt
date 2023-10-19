@@ -4,7 +4,6 @@ import androidx.lifecycle.LiveData
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
-
 /**
  * Data Access Object (DAO) for the Category entity.
  */

@@ -24,8 +24,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,9 +39,7 @@ import com.example.coopt2_fughetabout_it_inc.data.NoteDao
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-
 
 /**
  * Converts the notes into an observable type.
@@ -121,8 +117,6 @@ fun NotesAppUI(
     var isCreatingNote by remember { mutableStateOf(false) }
     var isCreatingCategory by remember { mutableStateOf(false) }
     var selectedNote: Note? by remember { mutableStateOf(null) }
-
-    // this will be set if we're creating a new category
 
     Box(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -289,7 +283,6 @@ fun NoteCreationScreen(
     var content by remember { mutableStateOf(note?.content ?: "") }
     var categoryId by remember { mutableStateOf<Long?>(null) }
 
-
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -307,18 +300,14 @@ fun NoteCreationScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-
         var expandedCatDropdown by remember { mutableStateOf(false) }
-
         var selectedCategoryName by remember { mutableStateOf("") }
 
         // If an existing category ID is provided, find and set the initial state
         if (note?.categoryId != null) {
-            val existingCategory = categoriesList.find { it.id == note?.categoryId }
+            val existingCategory = categoriesList.find { it.id == note.categoryId }
             if (existingCategory != null) {
                 selectedCategoryName = existingCategory.name
-                //categoryId = note?.categoryId
-                println("category exists")
             }
         }
         Box(
@@ -341,7 +330,6 @@ fun NoteCreationScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-
                 DropdownMenu(
                     expanded = expandedCatDropdown,
                     onDismissRequest = { expandedCatDropdown = false }
@@ -361,7 +349,6 @@ fun NoteCreationScreen(
                 }
             }
         }
-
 
         // Save, cancel, and delete buttons
         Row(
@@ -383,10 +370,8 @@ fun NoteCreationScreen(
                     } else {
                         note.title = title
                         note.content = content
-                        //note.categoryId = categoryId
                         onNoteEdited(note)
                     }
-
                 },
             ) {
                 if (note == null) {
@@ -394,7 +379,6 @@ fun NoteCreationScreen(
                 } else {
                     Text("Save")
                 }
-
             }
 
             // Cancel button
@@ -435,10 +419,8 @@ fun CategorySelectionScreen(
     val categoriesList = categories.observeAsState(emptyList())
     var newCategoryName by remember { mutableStateOf("") }
     var isCreatingNewCategory by remember { mutableStateOf(false) }
-    var expanded by remember { mutableStateOf(false) }
-    var selectedCategoryName by remember { mutableStateOf<String>("") }
+    var selectedCategoryName by remember { mutableStateOf("") }
     var selectedCategoryId by remember { mutableStateOf<Long?>(null) }
-
     var expandedCatDropdown by remember { mutableStateOf(false) }
 
     Box(
@@ -482,7 +464,6 @@ fun CategorySelectionScreen(
                             modifier = Modifier.fillMaxWidth()
                         )
 
-
                         DropdownMenu(
                             expanded = expandedCatDropdown,
                             onDismissRequest = { expandedCatDropdown = false }
@@ -502,7 +483,6 @@ fun CategorySelectionScreen(
                         }
                     }
                 }
-
 
                 // Button to show text field for creating a new category
                 Button(
@@ -550,7 +530,7 @@ fun CategorySelectionScreen(
                     }
                 }
 
-                selectedCategoryName?.let { categoryName ->
+                selectedCategoryName.let { categoryName ->
                     Text("Category chosen: $categoryName", modifier = Modifier.padding(top = 16.dp))
 
                     Button(
@@ -564,7 +544,6 @@ fun CategorySelectionScreen(
                     ) {
                         Text("Delete")
                     }
-
                 }
 
                 Button(

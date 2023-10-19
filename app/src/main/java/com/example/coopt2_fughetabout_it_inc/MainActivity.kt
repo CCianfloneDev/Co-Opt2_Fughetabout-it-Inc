@@ -1,6 +1,5 @@
 package com.example.coopt2_fughetabout_it_inc
 
-
 import com.example.coopt2_fughetabout_it_inc.data.CategoriesViewModel
 import CategoriesViewModelFactory
 import com.example.coopt2_fughetabout_it_inc.data.NotesViewModel
@@ -13,7 +12,6 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.coopt2_fughetabout_it_inc.data.AppDatabase
 import com.example.coopt2_fughetabout_it_inc.data.CategoryDao
 import com.example.coopt2_fughetabout_it_inc.data.NoteDao
-
 
 class MainActivity : ComponentActivity() {
     private lateinit var noteDao: NoteDao
@@ -41,7 +39,6 @@ class MainActivity : ComponentActivity() {
             this,
             CategoriesViewModelFactory(categoryDao)
         )[CategoriesViewModel::class.java]
-
 
         // Set the content view with NotesAppUI
         setContent {
