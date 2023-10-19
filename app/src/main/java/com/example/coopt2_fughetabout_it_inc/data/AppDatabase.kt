@@ -5,13 +5,12 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [Note::class, Category::class, Reminder::class], version = 1, exportSchema = false)
+@Database(entities = [Note::class, Category::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     // dao objects
     abstract fun noteDao(): NoteDao
     abstract fun categoryDao(): CategoryDao
-    abstract fun reminderDao(): ReminderDao
 
     companion object {
         // volatile indicates that writes to this property are immediately visible to other threads
