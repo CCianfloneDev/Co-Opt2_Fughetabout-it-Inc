@@ -111,6 +111,7 @@ fun NotesAppUI(
     noteDao: NoteDao,
     categoryDao: CategoryDao,
 ) {
+    // Starts off as an empty list till the state is updated later on.
     val notesList = noteDao.getAllNotes().observeAsState(emptyList())
 
     // State to track whether the user is creating a new note
@@ -134,6 +135,7 @@ fun NotesAppUI(
                 LazyColumn(
                     modifier = Modifier.weight(1f)
                 ) {
+                    // state updates here
                     items(notesList) { note ->
                         NoteItem(note = note)
                         {
@@ -196,7 +198,6 @@ fun NotesAppUI(
                             NoteCreationScreen(
                                 note = selectedNote,
                                 onNoteCreated = { newNote ->
-
                                     val note = Note(
                                         title = newNote.title,
                                         content = newNote.content,

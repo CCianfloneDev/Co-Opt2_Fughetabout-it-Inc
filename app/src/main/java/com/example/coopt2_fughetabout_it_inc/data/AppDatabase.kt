@@ -47,7 +47,8 @@ abstract class AppDatabase : RoomDatabase() {
             // Create and return the database instance
             return Room.databaseBuilder(
                 context.applicationContext,
-                AppDatabase::class.java, "app_database4"
+                // if updating schema, create new DB or must create a migration class to version it
+                AppDatabase::class.java, "app_database5"
             ).build()
         }
     }
