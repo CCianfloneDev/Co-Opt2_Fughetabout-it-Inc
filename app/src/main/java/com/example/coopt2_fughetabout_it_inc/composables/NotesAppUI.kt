@@ -209,7 +209,6 @@ fun NotesAppUI(
                                 },
                                 onNoteEdited = { editNote ->
                                     GlobalScope.launch(Dispatchers.Main) { noteDao.update(editNote) }
-
                                     selectedNote = null
                                     isCreatingNote = false
                                 },
@@ -217,8 +216,8 @@ fun NotesAppUI(
                                     selectedNote = null
                                     isCreatingNote = false
                                 },
-                                onDelete = {
-                                    // handle deleting of the note here
+                                onDelete = { noteToDelete ->
+                                    GlobalScope.launch(Dispatchers.Main) { noteDao.delete(noteToDelete) }
                                     selectedNote = null
                                     isCreatingNote = false
                                 },
@@ -273,7 +272,7 @@ fun NoteCreationScreen(
     onNoteCreated: (Note) -> Unit,
     onNoteEdited: (Note) -> Unit,
     onCancel: () -> Unit,
-    onDelete: () -> Unit,
+    onDelete: (Note) -> Unit,
     categories: LiveData<List<Category>>,
 ) {
     // Define state variables for user input
@@ -391,7 +390,9 @@ fun NoteCreationScreen(
             // Delete button (show only if it's an existing note)
             if (note != null) {
                 Button(
-                    onClick = onDelete,
+                    onClick = {
+                        onDelete(note)
+                    },
                 ) {
                     Text("Delete")
                 }
