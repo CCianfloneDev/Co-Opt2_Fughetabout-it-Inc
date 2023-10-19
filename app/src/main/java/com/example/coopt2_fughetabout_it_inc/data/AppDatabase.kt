@@ -5,11 +5,24 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
+/**
+ * The Room database class that defines the database configuration.
+ */
 @Database(entities = [Note::class, Category::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
-    // dao objects
+    /**
+     * Provides access to the Note Data Access Object (DAO).
+     *
+     * @return The Note DAO.
+     */
     abstract fun noteDao(): NoteDao
+
+    /**
+     * Provides access to the Category Data Access Object (DAO).
+     *
+     * @return The Category DAO.
+     */
     abstract fun categoryDao(): CategoryDao
 
     companion object {
@@ -17,7 +30,12 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var instance: AppDatabase? = null
 
-        // getDatabase provides access to the DB
+        /**
+         * Gets an instance of the database or creates one if it doesn't exist.
+         *
+         * @param context The application context.
+         * @return The AppDatabase instance.
+         */
         fun getDatabase(context: Context): AppDatabase {
             // Check if an instance already exists
             return instance ?: synchronized(this) {

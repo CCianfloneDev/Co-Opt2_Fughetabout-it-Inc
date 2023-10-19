@@ -21,6 +21,9 @@ class MainActivity : ComponentActivity() {
     private lateinit var notesViewModel: NotesViewModel
     private lateinit var categoriesViewModel: CategoriesViewModel
 
+    /**
+     * The main activity for the notes app.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -39,18 +42,7 @@ class MainActivity : ComponentActivity() {
             CategoriesViewModelFactory(categoryDao)
         )[CategoriesViewModel::class.java]
 
-//        val allNotes = noteDao.getAllNotes()
-//        val allCategories = categoryDao.getAllCategories()
-//        val allReminders = reminderDao.getAllReminders()
 
-//        allNotes.observe(this, Observer { notes ->
-//            for (note in notes) {
-//                println("Note ID: ${note.id}")
-//                println("Title: ${note.title}")
-//                println("Content: ${note.content}")
-//                // Print other properties as needed
-//            }
-//        })
         // Set the content view with NotesAppUI
         setContent {
             NotesAppUI(
