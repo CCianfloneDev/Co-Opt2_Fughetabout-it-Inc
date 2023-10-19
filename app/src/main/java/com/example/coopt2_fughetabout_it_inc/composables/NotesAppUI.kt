@@ -45,7 +45,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 
-///Converts the notes into an observable type.
+/**
+ * Converts the notes into an observable type.
+ *
+ * @param T The type of data in the LiveData.
+ * @param initial The initial value of the LiveData.
+ * @return The state as a Composable.
+ */
 @Composable
 fun <T> LiveData<T>.observeAsState(initial: T): T {
     val liveData = this
@@ -65,6 +71,12 @@ fun <T> LiveData<T>.observeAsState(initial: T): T {
     return state.value
 }
 
+/**
+ * Composable for displaying a single note item.
+ *
+ * @param note The note to display.
+ * @param onItemClick The action to perform when the note is clicked.
+ */
 @Composable
 fun NoteItem(
     note: Note,
@@ -91,6 +103,12 @@ fun NoteItem(
     }
 }
 
+/**
+ * Composable for the main UI of the notes app.
+ *
+ * @param noteDao Data access object for notes.
+ * @param categoryDao Data access object for categories.
+ */
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun NotesAppUI(
@@ -244,6 +262,16 @@ fun NotesAppUI(
     }
 }
 
+/**
+ * Composable for creating or editing a note.
+ *
+ * @param note The note to be created or edited.
+ * @param onNoteCreated Callback when a new note is created.
+ * @param onNoteEdited Callback when an existing note is edited.
+ * @param onCancel Callback when the user cancels the operation.
+ * @param onDelete Callback when the user deletes a note.
+ * @param categories LiveData of categories.
+ */
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun NoteCreationScreen(
@@ -282,10 +310,6 @@ fun NoteCreationScreen(
 
         var expandedCatDropdown by remember { mutableStateOf(false) }
 
-        //This is bad lol but whatever
-        //Set it to a empty string so we can have a non eye catching label
-        //Wait for the for each below to update the categoriesList state
-        //When we have a state we grab the first value
         var selectedCategoryName by remember { mutableStateOf("") }
 
         // If an existing category ID is provided, find and set the initial state
@@ -392,6 +416,14 @@ fun NoteCreationScreen(
     }
 }
 
+/**
+ * Composable for creating or deleting categories.
+ *
+ * @param categories LiveData of categories.
+ * @param onCategoryCreated Callback when a new category is created.
+ * @param onCategoryDeleted Callback when a category is deleted.
+ * @param onCancel Callback when the user cancels the operation.
+ */
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun CategorySelectionScreen(
@@ -471,37 +503,6 @@ fun CategorySelectionScreen(
                     }
                 }
 
-//                Box(
-//                    modifier = Modifier.fillMaxWidth()
-//                ) {
-//                    Text(
-//                        "Pick a category to delete", modifier = Modifier
-//                            .fillMaxWidth()
-//                            .clickable(onClick = { expanded = true })
-//                            .background(Color.LightGray)
-//                    )
-//
-//
-//                    // Dropdown to select an existing category
-//                    DropdownMenu(
-//                        expanded = expanded,
-//                        onDismissRequest = { expanded = false }
-//                    ) {
-//                        categoriesList.forEach { category ->
-//                            DropdownMenuItem(
-//                                onClick = {
-//                                    selectedCategoryName = category.name
-//                                    selectedCategoryId = category.id
-//                                    isCreatingNewCategory = false
-//                                    expanded = false
-//                                }
-//                            ) {
-//                                Text(text = category.name)
-//                            }
-//                        }
-//                    }
-//
-//                }
 
                 // Button to show text field for creating a new category
                 Button(
@@ -565,15 +566,6 @@ fun CategorySelectionScreen(
                     }
 
                 }
-
-//                Button(
-//                    onClick = { onCategorySelected(selectedCategoryId) },
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(top = 16.dp)
-//                ) {
-//                    Text("Apply")
-//                }
 
                 Button(
                     onClick = onCancel,
