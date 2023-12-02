@@ -8,6 +8,7 @@ import com.example.coopt2_fughetabout_it_inc.data.AppDatabase
 import com.example.coopt2_fughetabout_it_inc.data.CategoryDao
 import com.example.coopt2_fughetabout_it_inc.data.NoteDao
 
+
 class MainActivity : ComponentActivity() {
     // Data Access Objects
     private lateinit var noteDao: NoteDao

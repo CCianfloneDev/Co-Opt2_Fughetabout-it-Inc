@@ -1,12 +1,9 @@
 package com.example.coopt2_fughetabout_it_inc.composables
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,24 +11,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Button
 import androidx.compose.material.Card
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ExposedDropdownMenuBox
-import androidx.compose.material.ExposedDropdownMenuDefaults
+
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.material.TextField
+
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.LiveData
+
 import com.example.coopt2_fughetabout_it_inc.data.Category
 import com.example.coopt2_fughetabout_it_inc.data.CategoryDao
 import com.example.coopt2_fughetabout_it_inc.data.Note
@@ -41,63 +34,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
-/**
- * Converts the notes into an observable type.
- *
- * @param T The type of data in the LiveData.
- * @param initial The initial value of the LiveData.
- * @return The state as a Composable.
- */
-@Composable
-fun <T> LiveData<T>.observeAsState(initial: T): T {
-    val liveData = this
-    val state = remember { mutableStateOf(initial) }
-
-    DisposableEffect(liveData) {
-        val observer = androidx.lifecycle.Observer<T> { value ->
-            state.value = value
-        }
-        liveData.observeForever(observer)
-
-        onDispose {
-            liveData.removeObserver(observer)
-        }
-    }
-
-    return state.value
-}
-
-/**
- * Composable for displaying a single note item.
- *
- * @param note The note to display.
- * @param onItemClick The action to perform when the note is clicked.
- */
-@Composable
-fun NoteItem(
-    note: Note,
-    onItemClick: (Note) -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .background(Color.White),
-        elevation = 4.dp
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .clickable(onClick = { onItemClick(note) })
-        ) {
-            Text(
-                text = note.title,
-                style = MaterialTheme.typography.body1,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-    }
-}
 
 /**
  * Composable for the main UI of the notes app.
@@ -156,7 +92,7 @@ fun NotesAppUI(
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
-                    Text(text = "Add New Note")
+                    Text(text = "Add Note")
                 }
 
                 // Button to add a new note
@@ -218,7 +154,11 @@ fun NotesAppUI(
                                     isCreatingNote = false
                                 },
                                 onDelete = { noteToDelete ->
-                                    GlobalScope.launch(Dispatchers.Main) { noteDao.delete(noteToDelete) }
+                                    GlobalScope.launch(Dispatchers.Main) {
+                                        noteDao.delete(
+                                            noteToDelete
+                                        )
+                                    }
                                     selectedNote = null
                                     isCreatingNote = false
                                 },
@@ -251,311 +191,6 @@ fun NotesAppUI(
                         isCreatingNote = false
                     }
                 )
-            }
-        }
-    }
-}
-
-/**
- * Composable for creating or editing a note.
- *
- * @param note The note to be created or edited.
- * @param onNoteCreated Callback when a new note is created.
- * @param onNoteEdited Callback when an existing note is edited.
- * @param onCancel Callback when the user cancels the operation.
- * @param onDelete Callback when the user deletes a note.
- * @param categories LiveData of categories.
- */
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun NoteCreationScreen(
-    note: Note?, // nullable note parameter in-case we are opening a note instead of creating
-    onNoteCreated: (Note) -> Unit,
-    onNoteEdited: (Note) -> Unit,
-    onCancel: () -> Unit,
-    onDelete: (Note) -> Unit,
-    categories: LiveData<List<Category>>,
-) {
-    // Define state variables for user input
-    val categoriesList = categories.observeAsState(emptyList())
-
-    var title by remember { mutableStateOf(note?.title ?: "") }
-    var content by remember { mutableStateOf(note?.content ?: "") }
-    var categoryId by remember { mutableStateOf<Long?>(null) }
-
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // Input fields for title, content, category, and reminder
-        TextField(
-            value = title,
-            onValueChange = { title = it },
-            label = { Text("Title") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        TextField(
-            value = content,
-            onValueChange = { content = it },
-            label = { Text("Content") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        var expandedCatDropdown by remember { mutableStateOf(false) }
-        var selectedCategoryName by remember { mutableStateOf("") }
-
-        // If an existing category ID is provided, find and set the initial state
-        if (note?.categoryId != null) {
-            val existingCategory = categoriesList.find { it.id == note.categoryId }
-            if (existingCategory != null) {
-                selectedCategoryName = existingCategory.name
-            }
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(32.dp)
-        ) {
-            ExposedDropdownMenuBox(
-                expanded = expandedCatDropdown,
-                onExpandedChange = {
-                    expandedCatDropdown = !expandedCatDropdown
-                }
-            ) {
-
-                TextField(
-                    value = selectedCategoryName,
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCatDropdown) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                DropdownMenu(
-                    expanded = expandedCatDropdown,
-                    onDismissRequest = { expandedCatDropdown = false }
-                ) {
-                    categoriesList.forEach { category ->
-                        DropdownMenuItem(
-                            onClick = {
-                                selectedCategoryName = category.name
-                                note?.categoryId = category.id
-                                categoryId = category.id
-                                expandedCatDropdown = false
-                            }
-                        ) {
-                            Text(text = category.name)
-                        }
-                    }
-                }
-            }
-        }
-
-        // Save, cancel, and delete buttons
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Button(
-                onClick = {
-                    if (note == null) {
-                        val newNote = Note(
-                            id = 0L,
-                            title = title,
-                            content = content,
-                            categoryId = categoryId,
-                        )
-                        onNoteCreated(newNote)
-                    } else {
-                        note.title = title
-                        note.content = content
-                        onNoteEdited(note)
-                    }
-                },
-            ) {
-                if (note == null) {
-                    Text("Create")
-                } else {
-                    Text("Save")
-                }
-            }
-
-            // Cancel button
-            Button(
-                onClick = onCancel,
-            ) {
-                Text("Cancel")
-            }
-
-            // Delete button (show only if it's an existing note)
-            if (note != null) {
-                Button(
-                    onClick = {
-                        onDelete(note)
-                    },
-                ) {
-                    Text("Delete")
-                }
-            }
-        }
-    }
-}
-
-/**
- * Composable for creating or deleting categories.
- *
- * @param categories LiveData of categories.
- * @param onCategoryCreated Callback when a new category is created.
- * @param onCategoryDeleted Callback when a category is deleted.
- * @param onCancel Callback when the user cancels the operation.
- */
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun CategorySelectionScreen(
-    categories: LiveData<List<Category>>,
-    onCategoryCreated: (String) -> Unit,
-    onCategoryDeleted: (Long?) -> Unit,
-    onCancel: () -> Unit
-) {
-    val categoriesList = categories.observeAsState(emptyList())
-    var newCategoryName by remember { mutableStateOf("") }
-    var isCreatingNewCategory by remember { mutableStateOf(false) }
-    var selectedCategoryName by remember { mutableStateOf("") }
-    var selectedCategoryId by remember { mutableStateOf<Long?>(null) }
-    var expandedCatDropdown by remember { mutableStateOf(false) }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight()
-                .padding(16.dp)
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
-
-                Text(
-                    text = "Select Category",
-                    style = MaterialTheme.typography.h5,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp)
-                ) {
-                    ExposedDropdownMenuBox(
-                        expanded = expandedCatDropdown,
-                        onExpandedChange = {
-                            expandedCatDropdown = !expandedCatDropdown
-                        }
-                    ) {
-
-                        TextField(
-                            value = selectedCategoryName,
-                            onValueChange = {},
-                            readOnly = true,
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCatDropdown) },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        DropdownMenu(
-                            expanded = expandedCatDropdown,
-                            onDismissRequest = { expandedCatDropdown = false }
-                        ) {
-                            categoriesList.forEach { category ->
-                                DropdownMenuItem(
-                                    onClick = {
-                                        selectedCategoryName = category.name
-                                        selectedCategoryId = category.id
-                                        expandedCatDropdown = false
-                                        isCreatingNewCategory = false
-                                    }
-                                ) {
-                                    Text(text = category.name)
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Button to show text field for creating a new category
-                Button(
-                    onClick = { isCreatingNewCategory = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Create new Category")
-                }
-
-                if (isCreatingNewCategory) {
-                    // Text field for entering a new category name
-                    TextField(
-                        value = newCategoryName,
-                        onValueChange = { newCategoryName = it },
-                        label = { Text("Category Name") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    // Save and Cancel buttons for creating a new category
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Button(
-                            onClick = {
-                                if (newCategoryName.isNotBlank()) {
-                                    onCategoryCreated(newCategoryName)
-                                    newCategoryName = ""
-                                }
-                            }
-                        ) {
-                            Text("Add")
-                        }
-
-                        Button(
-                            onClick = {
-                                isCreatingNewCategory = false
-                                newCategoryName = ""
-                            }
-                        ) {
-                            Text("Cancel")
-                        }
-                    }
-                }
-
-                selectedCategoryName.let { categoryName ->
-                    Text("Category chosen: $categoryName", modifier = Modifier.padding(top = 16.dp))
-
-                    Button(
-                        onClick = {
-                            selectedCategoryName = ""
-                            onCategoryDeleted(selectedCategoryId)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp)
-                    ) {
-                        Text("Delete")
-                    }
-                }
-
-                Button(
-                    onClick = onCancel,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp)
-                ) {
-                    Text("Cancel")
-                }
             }
         }
     }
