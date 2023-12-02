@@ -30,7 +30,7 @@ interface NoteDao {
      * @param note The note to be updated (nullable).
      */
     @Update
-    suspend fun update(note: Note?)
+    suspend fun update(note: Note)
 
     /**
      * Deletes a note from the database.
