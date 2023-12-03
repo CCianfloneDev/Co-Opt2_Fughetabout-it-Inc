@@ -22,7 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
+
 import androidx.compose.ui.unit.dp
 
 import com.example.coopt2_fughetabout_it_inc.data.Category
@@ -82,32 +82,35 @@ fun NotesAppUI(
                 }
 
                 // Button to add a new note
-                Button(
-                    onClick = {
-                        selectedNote = null // Clear the selected note
-                        isCreatingNote = true
-                        isCreatingCategory = false
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Text(text = "Add Note")
+                Column {
+                    Button(
+                        onClick = {
+                            selectedNote = null // Clear the selected note
+                            isCreatingNote = true
+                            isCreatingCategory = false
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Text(text = "Add Note")
+                    }
+
+                    // Button to add a new note
+                    Button(
+                        onClick = {
+                            selectedNote = null // Clear the selected note
+                            isCreatingNote = false
+                            isCreatingCategory = true
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Text(text = "Add/delete Categories")
+                    }
                 }
 
-                // Button to add a new note
-                Button(
-                    onClick = {
-                        selectedNote = null // Clear the selected note
-                        isCreatingNote = false
-                        isCreatingCategory = true
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Text(text = "Add/delete Categories")
-                }
             }
         }
         if (isCreatingNote) {
