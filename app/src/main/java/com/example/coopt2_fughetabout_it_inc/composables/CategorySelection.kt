@@ -1,9 +1,7 @@
 package com.example.coopt2_fughetabout_it_inc.composables
 
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -54,24 +52,22 @@ fun CategorySelectionScreen(
     var selectedCategoryName by remember { mutableStateOf("") }
     var selectedCategoryId by remember { mutableStateOf<Long?>(null) }
     var expandedCatDropdown by remember { mutableStateOf(false) }
-    var isEditingCategory = false
+    var isEditingCategory by remember { mutableStateOf(false) }
 
+    //Used to keep track of input
     val focusManager = LocalFocusManager.current
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
     ) {
+        //Allows you to click off a text input, this is placed on the parent element otherwise we cant click "anywhere"
         Column(Modifier.pointerInput(Unit) {
             detectTapGestures(onTap = {
-
                 focusManager.clearFocus()
             })
         }) {
-
-
             if (isCreatingNewCategory) {
-
                 Text(
                     text = "Create Category",
                     style = MaterialTheme.typography.h5,
@@ -80,45 +76,42 @@ fun CategorySelectionScreen(
                         .align(Alignment.CenterHorizontally)
                 )
                 // Text field for entering a new category name
-
                 TextField(
+
                     value = newCategoryName,
                     onValueChange = { newCategoryName = it },
                     label = { Text("Category Name") },
-
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
                         .align(Alignment.CenterHorizontally)
-
                 )
 
                 // Save and Cancel buttons for creating a new category
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Button(
-                        onClick = {
-                            if (newCategoryName.isNotBlank()) {
-                                onCategoryCreated(newCategoryName)
-                                newCategoryName = ""
-                            }
-                        }
-                    ) {
-                        Text("Add")
-                    }
 
-                    Button(
-                        onClick = {
-                            isCreatingNewCategory = false
+                Button(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                    onClick = {
+                        if (newCategoryName.isNotBlank()) {
+                            onCategoryCreated(newCategoryName)
                             newCategoryName = ""
                         }
-                    ) {
-                        Text("Cancel")
                     }
+                ) {
+                    Text("Add")
+                }
+
+                Button(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                    onClick = {
+                        isCreatingNewCategory = false
+                        isEditingCategory = false
+                        newCategoryName = ""
+                    }
+                ) {
+                    Text("Cancel")
                 }
             }
 
@@ -192,15 +185,6 @@ fun CategorySelectionScreen(
                 }
             }
 
-
-            Button(
-                onClick = onCancel,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Text("Cancel")
-            }
             Spacer(modifier = Modifier.weight(1f))
             // Button to show text field for creating a new category
             Button(
@@ -211,6 +195,14 @@ fun CategorySelectionScreen(
 
             ) {
                 Text("Create new Category")
+            }
+            Button(
+                onClick = onCancel,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text("View notes")
             }
         }
 
