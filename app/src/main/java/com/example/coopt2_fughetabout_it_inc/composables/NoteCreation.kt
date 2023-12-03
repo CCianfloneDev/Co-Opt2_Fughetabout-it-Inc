@@ -1,11 +1,11 @@
 package com.example.coopt2_fughetabout_it_inc.composables
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.DropdownMenu
@@ -20,8 +20,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
 import com.example.coopt2_fughetabout_it_inc.data.Category
 import com.example.coopt2_fughetabout_it_inc.data.Note
@@ -55,7 +58,9 @@ fun NoteCreationScreen(
     var categoryId by remember { mutableStateOf<Long?>(null) }
 
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(20.dp)
     ) {
         // Input fields for title, content, category, and reminder
         TextField(
@@ -81,16 +86,24 @@ fun NoteCreationScreen(
                 selectedCategoryName = existingCategory.name
             }
         }
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(32.dp)
-        ) {
+        Row(Modifier.padding(5.dp)) {
+            Text(
+                text = "Category: ",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .padding(vertical = 18.dp, horizontal = 2.dp)
+                    .align(Alignment.CenterVertically)
+
+            )
             ExposedDropdownMenuBox(
                 expanded = expandedCatDropdown,
                 onExpandedChange = {
                     expandedCatDropdown = !expandedCatDropdown
-                }
+                },
+                modifier = Modifier
+                    .padding(vertical = 23.dp)
+                    .height(55.dp)
             ) {
 
                 TextField(
@@ -120,6 +133,7 @@ fun NoteCreationScreen(
                 }
             }
         }
+
 
         // Save, cancel, and delete buttons
         Row(
