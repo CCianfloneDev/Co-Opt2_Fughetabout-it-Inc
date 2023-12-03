@@ -1,5 +1,6 @@
 package com.example.coopt2_fughetabout_it_inc.composables
 
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,6 +25,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
 import com.example.coopt2_fughetabout_it_inc.data.Category
@@ -53,12 +56,18 @@ fun CategorySelectionScreen(
     var expandedCatDropdown by remember { mutableStateOf(false) }
     var isEditingCategory = false
 
+    val focusManager = LocalFocusManager.current
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
     ) {
-        Column {
+        Column(Modifier.pointerInput(Unit) {
+            detectTapGestures(onTap = {
+
+                focusManager.clearFocus()
+            })
+        }) {
 
 
             if (isCreatingNewCategory) {
@@ -76,10 +85,12 @@ fun CategorySelectionScreen(
                     value = newCategoryName,
                     onValueChange = { newCategoryName = it },
                     label = { Text("Category Name") },
+
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
                         .align(Alignment.CenterHorizontally)
+
                 )
 
                 // Save and Cancel buttons for creating a new category
